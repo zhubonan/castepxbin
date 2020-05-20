@@ -5,6 +5,7 @@ Written based on the example `pdos_bin.f90` file in open-source OptaDos code
 """
 import numpy as np
 from scipy.io import FortranFile
+from pymatgen.electronic_structure.core import Orbital, Spin
 
 
 def read_pdos_bin(filename, endian='big'):
@@ -68,3 +69,93 @@ def read_pdos_bin(filename, endian='big'):
         'pdos_weights': pdos_weights,
     }
     return output
+
+
+# Note that s-p labels are inferreed from dot castep output
+# f labels - I know the first three is among the first three. 
+# There is no way to tell if they are correct, f_1 is not very informative from VASP....
+orbital_mapping = [
+    [Orbital.s],
+    [Orbital.px, Orbital.py, Orbital.pz],
+    [Orbital.dz2, Orbital.dyz, Orbital.dxz, Orbital.dx2, Orbital.dxy],
+    [Orbital.f_1, Orbital.f_2, Orbital.f_3, Orbital.f0, Orbital.f1, Orbital.f2, Orbital.f3]
+]
+
+def order_pdos_data(input_items):
+    """
+    Arrange the PDOS weights so it is more meaningful
+
+    The result can be used to compute PDOS for creating CompleteDos object
+    that can be used for Pymatgen
+
+    :returns: A dictionary of {Site_index: {Orbital: {Spin: weight}}}
+    """
+
+    # We take average of each kpoints from here
+    # One might task why not take account the kpoints weight?
+    # because it should be taken account of in the TDOS
+    weights = input_items['pdos_weights'].sum(axis=2) / input_items['num_kpoints']
+    # Specie index for all orbitals
+    species = input_items['species']
+    # Index of each ion for all orbitals
+    ion = input_items['ion']
+    num_spins = input_items['num_spins']
+    # Angular momentum channel all orbitals
+    am_channel = input_items['am_channel']
+
+    unique_speices = np.unique(species)
+    unique_speices.sort()
+    site_index = 0
+    output_data = {}
+    # Initialise storage space
+    for specie in unique_speices:
+        specie_mask = specie == species
+        # Total number of ions for this specie
+        total_ions = ion[specie_mask].max()
+        # Note that indice are from one, not zero
+        for nion in range(1, total_ions + 1):
+            # Iterate through each ion
+            ion_mask =  (ion == nion) & specie_mask
+            max_am = am_channel[ion_mask].max()
+            site_dict = {}  # {Orbital: {Spin: weight}...}
+            for am in range(max_am + 1):
+                # Collect the angular momentum channels
+                ion_am_mask = (am_channel == am) & ion_mask
+                # Indices of each matched channels
+                ion_am_idx = np.where(ion_am_mask)[0]
+                for iam, iloc in enumerate(ion_am_idx):
+                    # iloc - index of the oribtal
+                    # You can have 4 orbitals for p channel - they have difference n numbers
+                    this_orb = orbital_mapping[am][iam % (2 * am + 1)]
+                    orb_dict = {}  # {Spin: weight...}
+                    if num_spins == 2:
+                        for ispin, espin in enumerate((Spin.up, Spin.down)):
+                            # Sumup 
+                            wtmp  = weights[iloc, :, ispin]
+                            orb_dict[espin] = wtmp
+                    else:
+                        orb_dict[Spin.up] = weights[iloc, :, 0]
+
+                    # Now we have the orb_dict populated
+                    if this_orb is orb_dict:
+                        site_dict[this_orb] = merge_spin(site_dict[this_orb], orb_dict)
+                    else:
+                        site_dict[this_orb] = orb_dict
+            # Now we populated site_dict add it to output_data
+            output_data[site_index] = site_dict
+            site_index += 1
+    
+    return output_data
+
+
+def merge_spin(spin_d1, spin_d2):
+    """Merge two dictionary contenting the weights"""
+    if len(spin_d1) != len(spin_d2):
+        raise RuntimeError("Critical - mismatch spin-dict length")
+    out = {}
+    for spin in spin_d1:
+        out[spin] = spin_d1[spin] + spin_d2[spin] 
+    return out
+
+                
+            
