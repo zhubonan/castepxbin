@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from os import path
 import os
 
-version = '0.1.0'
+version = '0.0.1'
 if __name__ == '__main__':
 
     README_PATH = path.join(path.dirname(__file__), "README.md")
@@ -14,7 +14,7 @@ if __name__ == '__main__':
         packages=find_packages(),
         long_description=long_desc,
         long_description_content_type='text/markdown',
-        name='castepbin',
+        name='castepxbin',
         author='Bonan Zhu',
         author_email='bon.zhu@protonmail.com',
         classifiers=[
@@ -24,9 +24,9 @@ if __name__ == '__main__':
             "Development Status :: 4 - Beta"
         ],
         description="A collection of readers for CASTEP binary outputs",
-        url="https://github.com/zhubonan/castepbin",
+        url="https://github.com/zhubonan/castepxbin",
         license="MIT License",
         version=version,
         extras_require={'testing': ['pytest', 'sumo']},
-        install_requires=["numpy", "six", "pymatgen"]
+        install_requires=["numpy", "six"]
         )
