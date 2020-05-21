@@ -37,12 +37,10 @@ def test_pdos_compute(pdos_bin, bands_file):
                                 read_bands_eigenvalues, _is_metal, _get_vbm,
                                 _ry_to_ev)
 
-    raw_output = read_pdos_bin(pdos_bin)
-    ordered_weights = reorder_pdos_data(raw_output)
     header = _read_bands_header_verbose(bands_file)
     _, weights, eigenvalues = read_bands_eigenvalues(bands_file, header)
 
     bin_width = 0.01
     bins = np.arange(0.0, 10.0 + bin_width, bin_width)
 
-    pdos = compute_pdos(ordered_weights, eigenvalues, weights, bins)
+    pdos = compute_pdos(pdos_bin, eigenvalues, weights, bins)
