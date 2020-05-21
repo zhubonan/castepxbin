@@ -6,6 +6,7 @@ Written based on the example `pdos_bin.f90` file in open-source OptaDos code
 import numpy as np
 from scipy.io import FortranFile
 from pymatgen.electronic_structure.core import Orbital, Spin
+from pymatgen.electronic_structure.dos import CompleteDos
 
 
 def read_pdos_bin(filename, endian='big'):
@@ -81,7 +82,7 @@ orbital_mapping = [
     [Orbital.f_1, Orbital.f_2, Orbital.f_3, Orbital.f0, Orbital.f1, Orbital.f2, Orbital.f3]
 ]
 
-def order_pdos_data(input_items):
+def reorder_pdos_data(input_items):
     """
     Arrange the PDOS weights so it is more meaningful
 
@@ -148,88 +149,31 @@ def order_pdos_data(input_items):
     return output_data
 
 
-def read_dos(bands_file, order_pdos_data, bin_width=0.01, gaussian=None,
-              padding=None, emin=None, emax=None, efermi_to_vbm=True):
-    """Convert DOS data from CASTEP .bands file to Pymatgen/Sumo format
-
-    The data is binned into a regular series using np.histogram
-
-    Args:
-        bands_file (:obj:`str`): Path to CASTEP prefix.bands output file. The
-            k-point positions, weights and eigenvalues are read from this file.
-        bin_width (:obj:`float`, optional): Spacing for DOS energy axis
-        gaussian (:obj:`float` or None, optional): Width of Gaussian broadening
-            function
-        padding (:obj:`float`, optional): Energy range above and below occupied
-            region. (This is not used if xmin and xmax are set.)
-        emin (:obj:`float`, optional): Minimum energy value for output DOS)
-        emax (:obj:`float`, optional): Maximum energy value for output DOS
-        efermi_to_vbm (:obj:`bool`, optional):
-            If a bandgap is detected, modify the stored Fermi energy
-            so that it lies at the VBM.
-
-    Returns:
-        :obj:`pymatgen.electronic_structure.dos.Dos`
+def compute_pdos(orderd_weights, eigenvalues, kpoints_weights, bins):
     """
-    from sumo.io.castep import _read_bands_header_verbose, read_bands_eigenvalues, _is_metal,_get_vbm, _ry_to_ev
-    header = _read_bands_header_verbose(bands_file)
+    Compute the PDOS from eigenvalue and kpoitns weights
+    
+    :param ordered_weights: Weight organised in the form {Site: {Orbital: {Spin:weight}}
+    :param eigenvealues: Eigenvalue as {Spin: array_)}
+    :param kpoints_weights: Weights of each kpoints, np.ndarray of (nk,)
+    :param bins: The bins for computing density of states
+    """
 
-    logging.info("Reading band eigenvalues...")
-    _, weights, eigenvalues = read_bands_eigenvalues(bands_file, header)
-
-    calc_efermi = header['e_fermi'][0] * _ry_to_ev * 2
-    if efermi_to_vbm and not _is_metal(eigenvalues, calc_efermi):
-        logging.info("Setting energy zero to VBM")
-        efermi = _get_vbm(eigenvalues, calc_efermi)
-    else:
-        logging.info("Setting energy zero to Fermi energy")
-        efermi = calc_efermi
-
-    emin_data = min(eigenvalues[Spin.up].flatten())
-    emax_data = max(eigenvalues[Spin.up].flatten())
-    if Spin.down in eigenvalues:
-        emin_data = min(emin_data, min(eigenvalues[Spin.down].flatten()))
-        emax_data = max(emax_data, max(eigenvalues[Spin.down].flatten()))
-
-    if padding is None and gaussian:
-        padding = gaussian * 3
-    elif padding is None:
-        padding = 0.5
-
-    if emin is None:
-        emin = emin_data - padding
-    if emax is None:
-        emax = emax_data + padding
-
-    # Shift sampling window to account for zeroing at VBM/EFermi
-    emin += efermi
-    emax += efermi
-
-    bins = np.arange(emin, emax + bin_width, bin_width)
-    energies = (bins[1:] + bins[:-1]) / 2
-
-    # Add rows to weights for each band so they are aligned with eigenval data
-    weights = weights * np.ones([eigenvalues[Spin.up].shape[0], 1])
-
-    dos_data = {spin: np.histogram(eigenvalue_set, bins=bins,
-                                   weights=weights)[0]
-                for spin, eigenvalue_set in eigenvalues.items()}
-    # Compute pdos
+    # Walk through the ordred_weights dictionary and compute PDOS for each weight
     pdos_data = {}
-    for site, orbs_dict in order_pdos_data.items():
-        orbs_outdict = {}
-        for orb, spin_dict in orbs_dict.items():
-            pdos_orbit = {spin: np.histogram(eigenvalue_set, bins=bins,
-                                   weights=weights * spin_dict[spin])[0]  # <--- Here  I need to weight it properly using the weights!!!!
+    for site, porbs_dict in orderd_weights.items():
+        porbs_outdict = {}
+        for orb, pspin_dict in porbs_dict.items():
+            pdos_orbit = {spin: np.histogram(
+                                   eigenvalue_set, 
+                                   bins=bins,
+                                   weights=kpoints_weights * pspin_dict[spin]  # weight (nk, ); pspin_dict[spin] (nk, nb)
+                                   )[0]  
                         for spin, eigenvalue_set in eigenvalues.items()}
-            orbs_outdict[orb] = pdos_orbit
-        pdos_data[site] = orbs_outdict
-            
-    dos = Dos(efermi, energies, dos_data)
-    if gaussian:
-        dos.densities = dos.get_smeared_densities(gaussian)
+            porbs_outdict[orb] = pdos_orbit
+        pdos_data[site] = porbs_outdict
+    return pdos_data
 
-    return dos, pdos_data, eigenvalues
 
 def merge_spin(spin_d1, spin_d2):
     """Merge two dictionary contenting the weights"""
