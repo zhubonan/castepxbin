@@ -28,5 +28,5 @@ if __name__ == '__main__':
         license="MIT License",
         version=version,
         extras_require={'testing': ['pytest', 'sumo']},
-        install_requires=["numpy", "six"]
+        install_requires=["numpy", "scipy"]
         )
