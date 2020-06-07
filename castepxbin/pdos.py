@@ -70,8 +70,6 @@ def read_pdos_bin(filename, endian='big'):
     return output
 
 
-
-
 def reorder_pdos_data(input_items):
     """
     Arrange the PDOS weights so it is more meaningful
@@ -84,16 +82,19 @@ def reorder_pdos_data(input_items):
     from pymatgen.electronic_structure.core import Orbital, Spin
 
     # Note that s-p labels are inferreed from dot castep output
-    # f labels - I know the first three is among the first three. 
+    # f labels - I know the first three is among the first three.
     # There is no way to tell if they are correct, f_1 is not very informative from VASP....
-    # TODO I should change these to CASTEP orbitals and privide mapping to that of the 
+    # TODO I should change these to CASTEP orbitals and privide mapping to that of the
     # pymatgen
-    orbital_mapping = [
-        [Orbital.s],
-        [Orbital.px, Orbital.py, Orbital.pz],
-        [Orbital.dz2, Orbital.dyz, Orbital.dxz, Orbital.dx2, Orbital.dxy],
-        [Orbital.f_1, Orbital.f_2, Orbital.f_3, Orbital.f0, Orbital.f1, Orbital.f2, Orbital.f3]
-    ]
+    orbital_mapping = [[Orbital.s], [Orbital.px, Orbital.py, Orbital.pz],
+                       [
+                           Orbital.dz2, Orbital.dyz, Orbital.dxz, Orbital.dx2,
+                           Orbital.dxy
+                       ],
+                       [
+                           Orbital.f_1, Orbital.f_2, Orbital.f_3, Orbital.f0,
+                           Orbital.f1, Orbital.f2, Orbital.f3
+                       ]]
 
     # We take average of each kpoints from here
     # One might task why not take account the kpoints weight?
@@ -119,7 +120,7 @@ def reorder_pdos_data(input_items):
         # Note that indice are from one, not zero
         for nion in range(1, total_ions + 1):
             # Iterate through each ion
-            ion_mask =  (ion == nion) & specie_mask
+            ion_mask = (ion == nion) & specie_mask
             max_am = am_channel[ion_mask].max()
             site_dict = {}  # {Orbital: {Spin: weight}...}
             for am in range(max_am + 1):
@@ -134,21 +135,22 @@ def reorder_pdos_data(input_items):
                     orb_dict = {}  # {Spin: weight...}
                     if num_spins == 2:
                         for ispin, espin in enumerate((Spin.up, Spin.down)):
-                            # Sumup 
-                            wtmp  = weights[iloc, :, :, ispin]
+                            # Sumup
+                            wtmp = weights[iloc, :, :, ispin]
                             orb_dict[espin] = wtmp
                     else:
                         orb_dict[Spin.up] = weights[iloc, :, :, 0]
 
                     # Now we have the orb_dict populated
                     if this_orb is orb_dict:
-                        site_dict[this_orb] = merge_spin(site_dict[this_orb], orb_dict)
+                        site_dict[this_orb] = merge_spin(
+                            site_dict[this_orb], orb_dict)
                     else:
                         site_dict[this_orb] = orb_dict
             # Now we populated site_dict add it to output_data
             output_data[site_index] = site_dict
             site_index += 1
-    
+
     return output_data
 
 
@@ -168,12 +170,15 @@ def compute_pdos(pdos_bin, eigenvalues, kpoints_weights, bins):
     for site, porbs_dict in ordered_weights.items():
         porbs_outdict = {}
         for orb, pspin_dict in porbs_dict.items():
-            pdos_orbit = {spin: np.histogram(
-                                   eigenvalue_set, 
-                                   bins=bins,
-                                   weights=kpoints_weights * pspin_dict[spin]  # weight (nk, ); pspin_dict[spin] (nk, nb)
-                                   )[0]  
-                        for spin, eigenvalue_set in eigenvalues.items()}
+            pdos_orbit = {
+                spin: np.histogram(
+                    eigenvalue_set,
+                    bins=bins,
+                    weights=kpoints_weights * pspin_dict[
+                        spin]  # weight (nk, ); pspin_dict[spin] (nk, nb)
+                )[0]
+                for spin, eigenvalue_set in eigenvalues.items()
+            }
             porbs_outdict[orb] = pdos_orbit
         pdos_data[site] = porbs_outdict
     return pdos_data
@@ -185,8 +190,5 @@ def merge_spin(spin_d1, spin_d2):
         raise RuntimeError("Critical - mismatch spin-dict length")
     out = {}
     for spin in spin_d1:
-        out[spin] = spin_d1[spin] + spin_d2[spin] 
+        out[spin] = spin_d1[spin] + spin_d2[spin]
     return out
-
-                
-            
