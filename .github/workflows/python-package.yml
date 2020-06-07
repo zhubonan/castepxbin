@@ -27,7 +27,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pytest wheel
-	pip install pymatgen --no-binary pymatgen
+        pip install pymatgen --no-binary pymatgen
         pip install .[testing]
     - name: Test with pytest
       run: |
