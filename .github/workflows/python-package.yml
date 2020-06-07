@@ -26,7 +26,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
+        pip install pytest wheel
         pip install .[testing]
     - name: Test with pytest
       run: |
