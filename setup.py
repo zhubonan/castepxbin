@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from os import path
 import os
 
-version = '0.0.1'
+version = '0.1.0'
 if __name__ == '__main__':
 
     README_PATH = path.join(path.dirname(__file__), "README.md")
@@ -16,7 +16,7 @@ if __name__ == '__main__':
         long_description_content_type='text/markdown',
         name='castepxbin',
         author='Bonan Zhu',
-        author_email='bon.zhu@protonmail.com',
+        author_email='zhubonan@outlook.com',
         classifiers=[
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
@@ -28,5 +28,5 @@ if __name__ == '__main__':
         license="MIT License",
         version=version,
         extras_require={'testing': ['pytest', 'pymatgen'], 'pdos-order': ['pymatgen']},
-        install_requires=["numpy", "scipy"]
+        install_requires=["numpy>=1,<2", "scipy>=1,<2"]
         )
