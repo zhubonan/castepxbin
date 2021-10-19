@@ -75,3 +75,33 @@ def test_castep_bin_reader(castep_bin):
     assert all(field in data for field in expected_fields)
     assert data["forces"].shape == (3, data["max_ions_in_species"], data["num_species"])
     assert data["phonon_force_constant_matrix"].shape == (3, data["num_ions"], 3, data["num_ions"], data["num_cells"])
+
+    # Check that the same parsing works even if cell info is missing (e.g., test recursive dimension solving)
+    data = read_castep_bin(castep_bin, records_to_extract=("FORCES", "CELL%MAX_IONS_IN_SPECIES"))
+
+    expected_fields = (
+        "num_species",
+        "max_ions_in_species",
+        "forces",
+    )
+    assert all(field in data for field in expected_fields)
+    assert data["forces"].shape == (3, data["max_ions_in_species"], data["num_species"])
+
+    # Check that indivdual blocks can resolve self-consistently
+    # (the value of num_ions or num_cells are not read) from the castep_bin
+    data = read_castep_bin(castep_bin, records_to_extract=("FORCE_CON"))
+
+    expected_fields = (
+        "num_ions",
+        "num_cells",
+        "phonon_supercell_matrix",
+        "phonon_force_constant_matrix",
+        "phonon_supercell_origins",
+        "phonon_force_constant_row"
+    )
+    assert all(field in data for field in expected_fields)
+    assert data["phonon_force_constant_matrix"].shape == (3, data["num_ions"], 3, data["num_ions"], data["num_cells"])
+
+    # Check that process fails safely when not enough info is available
+    with pytest.raises(RuntimeError, match=r"Too many unknowns to resolve*"):
+        data = read_castep_bin(castep_bin, records_to_extract=("FORCES"))
