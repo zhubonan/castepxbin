@@ -42,7 +42,12 @@ CASTEP_BIN_HEADERS = {
         "phonon_supercell_origins": (">i4", (3, "num_cells")),
         "phonon_force_constant_row": (">i4", (1,)),
     },
+    "BORN_CHGS": {
+        "born_charges": (">f8", (3, 3, "num_ions")),
+    },
 }
+
+CASTEP_BIN_HEADERS_UNPACKED = {k: v for header in CASTEP_BIN_HEADERS for k, v in CASTEP_BIN_HEADERS[header].items()}
 
 
 def read_castep_bin(
@@ -98,7 +103,9 @@ def read_castep_bin(
             continue
 
         if header not in header_offset_map:
-            raise RuntimeError(f"Unable to find desired header {header} in file.")
+            if records_to_extract and header in records_to_extract:
+                raise RuntimeError(f"Unable to find desired header {header} in file.")
+            continue
 
         with open(filename, "rb") as f:
             castep_data.update(
@@ -110,7 +117,63 @@ def read_castep_bin(
                 )
             )
 
+    _reshape_arrays(castep_data)
+
     return castep_data
+
+
+def _reshape_arrays(castep_data: Dict[str, Any], _requires: Optional[dict] = None) -> None:
+    """Recursively solve for unknown dimensions across arrays, reshaping
+    them along the way.
+
+    Procedure will fail if any iteration starts with every un-reshaped field
+    possessing multiple unknown dimensions.
+
+    Unknown dimensions that are repeated (e.g., square matrix) will be solved.
+
+    Args:
+        castep_data: The dictionary of decoded but un-reshaped data, with keys
+            from `CASTEP_BIN_HEADERS_UNPACKED`.
+        _requires: Cache of remaining unknowns used for recursion.
+
+    """
+    if _requires is None:
+        _requires = {}
+    resolved_unknowns = {}
+    for field in castep_data:
+        if isinstance(castep_data[field], np.ndarray) and len(castep_data[field].shape) == 1:
+            shape = [castep_data.get(s) or s for s in CASTEP_BIN_HEADERS_UNPACKED[field][1]]
+            _requires[field] = [s for s in shape if isinstance(s, str)]
+
+            if len(set(_requires[field])) == 1:
+                # Attempt to resolve a single missing unknown.
+                # This unknown can appear in multiple dimensions of the same field.
+                unknown = _requires[field][0]
+                n = int(np.round(
+                    (castep_data[field].shape[0] // np.prod([s for s in shape if s != unknown]))
+                    ** 1./len(_requires[field]))
+                )
+                castep_data[field] = np.reshape(castep_data[field], [n if isinstance(v, str) else v for v in shape])
+                resolved_unknowns[unknown] = castep_data[field].shape[shape.index(unknown)]
+                _requires.pop(field)
+
+            elif not _requires[field]:
+                # Shape should now be fully-specified
+                castep_data[field] = np.reshape(castep_data[field], shape)
+                _requires.pop(field)
+
+    castep_data.update(resolved_unknowns)
+    for field in _requires:
+        _requires[field] = [
+            s for s in [castep_data.get(s) or s for s in CASTEP_BIN_HEADERS_UNPACKED[field][1]]
+            if isinstance(s, str)
+        ]
+    # If all remaining fields have more than 1 unknown, give up
+    if _requires and all([len(set(_requires[field])) > 1 for field in _requires]):
+        raise RuntimeError(f"Too many unknowns to resolve: {_requires}")
+
+    while _requires:
+        _reshape_arrays(castep_data, _requires)
 
 
 def _decode_records(
@@ -148,15 +211,6 @@ def _decode_records(
     for subrecord in record_spec:
         dtype, shape = record_spec[subrecord]
 
-        # Try to resolve shape from existing data
-        shape_mut = list(shape)
-        for ind, v in enumerate(shape):
-            if isinstance(v, str):
-                if isinstance(castep_data.get(v), int):
-                    shape_mut[ind] = castep_data[v]
-                elif isinstance(decoded_data.get(v), int):
-                    shape_mut[ind] = decoded_data[v]
-
         # Read the data record and marker and calculate the total number of array elements
         record_data, marker = _read_record(fp)
         count = marker // int(dtype[-1])
@@ -168,20 +222,6 @@ def _decode_records(
         if shape == (1,):
             assert decoded_data[subrecord].shape == (1,)
             decoded_data[subrecord] = decoded_data[subrecord].tolist()[0]
-
-        # Now try to reshape any multi-dim arrays and try to solve for unknown dims
-        if len(shape) > 1:
-            unknowns = [v for v in shape_mut if isinstance(v, str)]
-            # If only 1 unknown remains, set dim to -1 and extract value from final reshape
-            if len(unknowns) == 1:
-                shape_mut = [-1 if isinstance(v, str) else v for v in shape_mut]
-            decoded_data[subrecord] = np.reshape(decoded_data[subrecord], shape_mut)
-            if len(unknowns) == 1:
-                decoded_data[unknowns[0]] = decoded_data[subrecord].shape[
-                    shape.index(unknowns[0])
-                ]
-
-            decoded_data[subrecord] = np.reshape(decoded_data[subrecord], shape_mut)
 
     return decoded_data
 
