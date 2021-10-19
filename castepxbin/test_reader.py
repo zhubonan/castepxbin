@@ -22,7 +22,10 @@ def bands_file():
 
 @pytest.fixture
 def castep_bin():
-    return os.path.join(os.path.split(__file__)[0], 'test_data/Si2.castep_bin')
+    """.castep_bin test file taken from Euphonic:
+    https://github.com/pace-neutrons/Euphonic/blob/v0.6.2/tests_and_analysis/test/data/castep_files/Si2-sc-skew/Si2-sc-skew.castep_bin
+    """
+    return os.path.join(os.path.split(__file__)[0], 'test_data/Si2-sc-skew.castep_bin')
 
 
 def test_pdos_reader(pdos_bin):
@@ -54,10 +57,15 @@ def test_pdos_compute(pdos_bin, bands_file):
     pdos = compute_pdos(pdos_bin, eigenvalues, weights, bins)
 
 
-@pytest.mark.skipif(not os.isfile(castep_bin))
 def test_castep_bin_reader(castep_bin):
-    data = read_castep_bin(castep_bin, records_to_extract=("FORCES", "FORCE_CON"))
+    if not os.path.isfile(castep_bin):
+        pytest.skip(".castep_bin test data is missing")
+    data = read_castep_bin(castep_bin)
     expected_fields = (
+        "num_ions",
+        "num_cells",
+        "num_species",
+        "max_ions_in_species",
         "forces",
         "phonon_supercell_matrix",
         "phonon_force_constant_matrix",
@@ -65,3 +73,5 @@ def test_castep_bin_reader(castep_bin):
         "phonon_force_constant_row"
     )
     assert all(field in data for field in expected_fields)
+    assert data["forces"].shape == (3, data["max_ions_in_species"], data["num_species"])
+    assert data["phonon_force_constant_matrix"].shape == (3, data["num_ions"], 3, data["num_ions"], data["num_cells"])
