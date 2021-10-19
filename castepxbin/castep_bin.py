@@ -17,15 +17,25 @@ from pathlib import Path
 from struct import unpack
 import io
 
+import numpy as np
+
 
 __all__ = ("read_castep_bin",)
 
 
 CASTEP_BIN_HEADERS = {
-    "CELL%NUM_IONS": {"num_ions": (">i4", (1, ))},
-    "CELL%MAX_IONS_IN_SPECIES": {"max_ions_in_species": (">i4", (1, ))},
-    "CELL%NUM_SPECIES": {"num_species": (">i4", (1, ))},
-    "FORCES": {"forces": (">f8", (3, "max_ions_in_species", "num_species"))},
+    "CELL%NUM_IONS": {
+        "num_ions": (">i4", (1,))
+    },
+    "CELL%MAX_IONS_IN_SPECIES": {
+        "max_ions_in_species": (">i4", (1,))
+    },
+    "CELL%NUM_SPECIES": {
+        "num_species": (">i4", (1,))
+    },
+    "FORCES": {
+        "forces": (">f8", (3, "max_ions_in_species", "num_species"))
+    },
     "FORCE_CON": {
         "phonon_supercell_matrix": (">i4", (3, 3)),
         "phonon_force_constant_matrix": (">f8", (3, "num_ions", 3, "num_ions", "num_cells")),
@@ -91,22 +101,50 @@ def read_castep_bin(
             raise RuntimeError(f"Unable to find desired header {header} in file.")
 
         with open(filename, "rb") as f:
-            castep_data.update(_decode_records(f, header, header_offset_map[header], castep_data))
+            castep_data.update(
+                _decode_records(
+                    f,
+                    CASTEP_BIN_HEADERS[header],
+                    header_offset_map[header],
+                    castep_data,
+                )
+            )
 
     return castep_data
 
 
-def _decode_records(data, header, offset, castep_data):
-    if header not in CASTEP_BIN_HEADERS:
-        raise RuntimeError(
-            f"Cannot decode data for header {header}, no record specification found."
-        )
+def _decode_records(
+    fp: io.BufferedReader,
+    record_spec: Dict[str, Tuple[int, Tuple]],
+    offset: int,
+    castep_data: Dict[str, Any],
+) -> Dict[str, Any]:
+    """For a given file buffer, header name and byte offset, read
+    the expected number of file records and decode them according to
+    the type and shape specification provided in `CASTEP_BIN_HEADERS`.
 
-    import numpy as np
+    Note:
+        The file buffer will not be reset to its initial position.
+
+    Args:
+        fp: The open file buffer.
+        record_spec: An ordered dictionary with an entry per expected
+            record, containing a tuple for `(dtype, shape)`. Unknown
+            dimensions can be indicated by string values in `shape`.
+            These unknowns will be resolved where possible and returned
+            in the final output dictionary.
+        offset: The byte offset at which the records start in the buffer.
+        castep_data: Any already decoded data to be used to resolve
+            unknown dimensions.
+
+    Returns:
+        A dictionary containing the decoded data, and any named unknowns
+        that were resolved in this pass.
+
+    """
 
     decoded_data = {}
-    record_spec = CASTEP_BIN_HEADERS[header]
-    data.seek(offset)
+    fp.seek(offset)
     for subrecord in record_spec:
         dtype, shape = record_spec[subrecord]
 
@@ -120,13 +158,15 @@ def _decode_records(data, header, offset, castep_data):
                     shape_mut[ind] = decoded_data[v]
 
         # Read the data record and marker and calculate the total number of array elements
-        record_data, marker = _read_record(data)
+        record_data, marker = _read_record(fp)
         count = marker // int(dtype[-1])
-        decoded_data[subrecord] = np.frombuffer(record_data, np.dtype(dtype), count=count)
+        decoded_data[subrecord] = np.frombuffer(
+            record_data, np.dtype(dtype), count=count
+        )
 
         # Unpack single-valued data
-        if shape == (1, ):
-            assert decoded_data[subrecord].shape == (1, )
+        if shape == (1,):
+            assert decoded_data[subrecord].shape == (1,)
             decoded_data[subrecord] = decoded_data[subrecord].tolist()[0]
 
         # Now try to reshape any multi-dim arrays and try to solve for unknown dims
@@ -137,7 +177,9 @@ def _decode_records(data, header, offset, castep_data):
                 shape_mut = [-1 if isinstance(v, str) else v for v in shape_mut]
             decoded_data[subrecord] = np.reshape(decoded_data[subrecord], shape_mut)
             if len(unknowns) == 1:
-                decoded_data[unknowns[0]] = decoded_data[subrecord].shape[shape.index(unknowns[0])]
+                decoded_data[unknowns[0]] = decoded_data[subrecord].shape[
+                    shape.index(unknowns[0])
+                ]
 
             decoded_data[subrecord] = np.reshape(decoded_data[subrecord], shape_mut)
 
@@ -224,7 +266,9 @@ def _read_record(
     return data, marker
 
 
-def _read_marker(f: Union[io.BufferedReader, bytes], record_marker_size: int = 4) -> int:
+def _read_marker(
+    f: Union[io.BufferedReader, bytes], record_marker_size: int = 4
+) -> int:
     """Read the next *n* bytes from the buffer and try to interpret them
     as a Fortran record marker (typically uint4, but can depend on
     compiler).
