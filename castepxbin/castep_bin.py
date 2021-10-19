@@ -22,18 +22,21 @@ __all__ = ("read_castep_bin",)
 
 
 CASTEP_BIN_HEADERS = {
-    "FORCES": {"forces": (">f8", (3, -1))},
+    "CELL%NUM_IONS": {"num_ions": (">i4", (1, ))},
+    "CELL%MAX_IONS_IN_SPECIES": {"max_ions_in_species": (">i4", (1, ))},
+    "CELL%NUM_SPECIES": {"num_species": (">i4", (1, ))},
+    "FORCES": {"forces": (">f8", (3, "max_ions_in_species", "num_species"))},
     "FORCE_CON": {
         "phonon_supercell_matrix": (">i4", (3, 3)),
-        "phonon_force_constant_matrix": (">f8", (3, "n", 3, "n", "m")),
-        "phonon_supercell_origins": (">i4", (3, "m")),
+        "phonon_force_constant_matrix": (">f8", (3, "num_ions", 3, "num_ions", "num_cells")),
+        "phonon_supercell_origins": (">i4", (3, "num_cells")),
         "phonon_force_constant_row": (">i4", (1,)),
     },
 }
 
 
 def read_castep_bin(
-    filename: Union[str, Path], records_to_extract: Collection[str]
+    filename: Union[str, Path], records_to_extract: Optional[Collection[str]] = None
 ) -> Dict[str, Any]:
     """
     Read a castep_bin file for a given CASTEP run.
@@ -64,7 +67,10 @@ def read_castep_bin(
         <length of binary data in bytes (record marker)>
 
     Args:
-        filename (str): name of the file to be read
+        filename: path of the file to be read
+        records_to_extract: A collection of CASTEP bin headers. If `None`,
+            extract all headers for which there is a defined shape specification
+            in `CASTEP_BIN_HEADERS`.
 
     Returns:
         A dictionary following the CASTEP header hierarchy found within
@@ -76,17 +82,21 @@ def read_castep_bin(
 
     castep_data = {}
 
-    for header in records_to_extract:
+    for header in CASTEP_BIN_HEADERS:
+
+        if records_to_extract and header not in records_to_extract:
+            continue
+
         if header not in header_offset_map:
-            raise RuntimeError(f"Unable to read desired header {header} from file.")
+            raise RuntimeError(f"Unable to find desired header {header} in file.")
 
         with open(filename, "rb") as f:
-            castep_data[header] = _decode_records(f, header, header_offset_map[header])
+            castep_data.update(_decode_records(f, header, header_offset_map[header], castep_data))
 
     return castep_data
 
 
-def _decode_records(data, header, offset):
+def _decode_records(data, header, offset, castep_data):
     if header not in CASTEP_BIN_HEADERS:
         raise RuntimeError(
             f"Cannot decode data for header {header}, no record specification found."
@@ -99,13 +109,37 @@ def _decode_records(data, header, offset):
     data.seek(offset)
     for subrecord in record_spec:
         dtype, shape = record_spec[subrecord]
+
+        # Try to resolve shape from existing data
+        shape_mut = list(shape)
+        for ind, v in enumerate(shape):
+            if isinstance(v, str):
+                if isinstance(castep_data.get(v), int):
+                    shape_mut[ind] = castep_data[v]
+                elif isinstance(decoded_data.get(v), int):
+                    shape_mut[ind] = decoded_data[v]
+
+        # Read the data record and marker and calculate the total number of array elements
         record_data, marker = _read_record(data)
         count = marker // int(dtype[-1])
         decoded_data[subrecord] = np.frombuffer(record_data, np.dtype(dtype), count=count)
 
-    # Now reshape the arrays and try to solve for unknown dims
-    # if len(shape) > 1:
-    #     decoded_data[subrecord] = np.reshape(decoded_data[subrecord], shape).T
+        # Unpack single-valued data
+        if shape == (1, ):
+            assert decoded_data[subrecord].shape == (1, )
+            decoded_data[subrecord] = decoded_data[subrecord].tolist()[0]
+
+        # Now try to reshape any multi-dim arrays and try to solve for unknown dims
+        if len(shape) > 1:
+            unknowns = [v for v in shape_mut if isinstance(v, str)]
+            # If only 1 unknown remains, set dim to -1 and extract value from final reshape
+            if len(unknowns) == 1:
+                shape_mut = [-1 if isinstance(v, str) else v for v in shape_mut]
+            decoded_data[subrecord] = np.reshape(decoded_data[subrecord], shape_mut)
+            if len(unknowns) == 1:
+                decoded_data[unknowns[0]] = decoded_data[subrecord].shape[shape.index(unknowns[0])]
+
+            decoded_data[subrecord] = np.reshape(decoded_data[subrecord], shape_mut)
 
     return decoded_data
 
