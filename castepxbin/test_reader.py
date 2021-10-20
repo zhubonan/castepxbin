@@ -6,6 +6,7 @@ import pytest
 import numpy as np
 
 from .pdos import read_pdos_bin, reorder_pdos_data, compute_pdos
+from .ome_bin import read_ome_bin, read_cst_ome
 from pymatgen.electronic_structure.core import Orbital, Spin
 
 
@@ -13,6 +14,13 @@ from pymatgen.electronic_structure.core import Orbital, Spin
 def pdos_bin():
     return os.path.join(os.path.split(__file__)[0], 'test_data/Si2.pdos_bin')
 
+@pytest.fixture
+def ome_bin():
+    return os.path.join(os.path.split(__file__)[0], 'test_data/Si2.ome_bin')
+
+@pytest.fixture
+def cst_ome():
+    return os.path.join(os.path.split(__file__)[0], 'test_data/Si2.cst_ome')
 
 @pytest.fixture
 def bands_file():
@@ -46,3 +54,17 @@ def test_pdos_compute(pdos_bin, bands_file):
     bins = np.arange(0.0, 10.0 + bin_width, bin_width)
 
     pdos = compute_pdos(pdos_bin, eigenvalues, weights, bins)
+
+def test_ome_bin(ome_bin):
+    """Test reading ome_bin file"""
+    v, header, om = read_ome_bin(ome_bin, 23, 2, 1)
+    assert "CASTEP" in header
+    assert v == pytest.approx(1.0)
+    assert om.shape == (1, 2, 3, 23, 23)
+    assert np.imag(om[0, 0, 1, 0, 0]) == pytest.approx(0.0)
+
+def test_cst_ome(cst_ome):
+    """Test reading ome_bin file"""
+    om = read_cst_ome(cst_ome, 23, 2, 1)
+    assert om.shape == (1, 2, 3, 23, 23)
+    assert np.imag(om[0, 0, 1, -1, -1]) == pytest.approx(0.0)
