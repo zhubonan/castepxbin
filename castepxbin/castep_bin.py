@@ -153,13 +153,13 @@ def _reshape_arrays(castep_data: Dict[str, Any], _requires: Optional[dict] = Non
                     (castep_data[field].shape[0] // np.prod([s for s in shape if s != unknown]))
                     ** 1./len(_requires[field]))
                 )
-                castep_data[field] = np.reshape(castep_data[field], [n if isinstance(v, str) else v for v in shape])
+                castep_data[field] = np.reshape(castep_data[field], [n if isinstance(v, str) else v for v in shape], order="F")
                 resolved_unknowns[unknown] = castep_data[field].shape[shape.index(unknown)]
                 _requires.pop(field)
 
             elif not _requires[field]:
                 # Shape should now be fully-specified
-                castep_data[field] = np.reshape(castep_data[field], shape)
+                castep_data[field] = np.reshape(castep_data[field], shape, order="F")
                 _requires.pop(field)
 
     castep_data.update(resolved_unknowns)
