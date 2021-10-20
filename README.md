@@ -2,14 +2,13 @@
 
 ## Overview
 
-A collection of readers for CASTEP binary output from CASTEP.
+A collection of readers for binary output from [CASTEP](www.castep.org).
 At the moment, there is only a reader for `pdos_dos` file available.
 This file contains the weights of the eigenvalues on each projected orbitals,
 which can be used to constructed projected density of states.
 
-The hope of this this repository is to provide, possibly, a collection of readers
-for the binary outputs. The code for `pdos_bin` can be used as a example, and 
-it should be straight forward to implement readers for other files such as:
+The code for reading `pdos_bin` files can be used as an example for implementing readers
+of other files including: 
 
 - `ome_bin`
 - `dome_bin`
@@ -19,7 +18,7 @@ it should be straight forward to implement readers for other files such as:
 
 ## Installation
 
-This package can be install with `pip`
+This package can be install using `pip`
 
 ```
 pip install castepxbin
@@ -30,6 +29,10 @@ To install extra dependencies may be needed for testing:
 ```
 pip install castepxbin[testing]
 ```
+
+The two main dependencies are `numpy` and `scipy`. 
+The optional `pymatgen` dependency is used for reordering orbitals.
+Please note that the consistency of these labels for f orbitals has not been checked.
 
 ## Acknowledgement
 

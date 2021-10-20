@@ -3,8 +3,81 @@ Reader module for CASTEP pdos_bin
 
 Written based on the example `pdos_bin.f90` file in open-source OptaDos code
 """
+from enum import Enum, unique
 import numpy as np
 from scipy.io import FortranFile
+
+
+@unique
+class SpinEnum(Enum):
+    """
+    Enum type for Spin.  Only up and down.
+    Usage: Spin.up, Spin.down.
+    """
+    up, down = (1, -1)
+
+    def __int__(self):
+        return self.value
+
+    def __float__(self):
+        return float(self.value)
+
+    def __str__(self):
+        return str(self.value)
+
+
+@unique
+class OrbitalType(Enum):
+    """
+    Enum type for orbital type. Indices are basically the azimuthal quantum
+    number, l.
+    """
+
+    s = 0
+    p = 1
+    d = 2
+    f = 3
+
+    def __str__(self):
+        return str(self.name)
+
+
+
+@unique
+class OrbitalEnum(Enum):
+    """
+    Enum type for specific orbitals. The value are the name reported by CASTEP.
+    """
+
+    s = "S"
+    px = "Px"
+    py = "Py"
+    pz = "Pz"
+    dxy = "Dxy"
+    dyz = "Dzy"
+    dz2 = "Dzz"
+    dxz = "Dzx"
+    dx2 = "Dxx-yy"
+    f_xxx = "Fxxx"
+    f_yyy = "Fyyy"
+    f_zzz = "Fzzz"
+    f_xyz = "Fxyz"
+    f_z_xx_yy = "Fz(xx-yy)"
+    f_y_zz_xx = "Fy(zz-xx)"
+    f_x_yy_zz = "Fx(yy-zz)"
+
+    def __int__(self):
+        return self.value
+
+    def __str__(self):
+        return str(self.name)
+
+    @property
+    def orbital_type(self):
+        """
+        Returns OrbitalType of an orbital.
+        """
+        return OrbitalType[self.name[0]]
 
 
 def read_pdos_bin(filename, endian='big'):
@@ -46,7 +119,7 @@ def read_pdos_bin(filename, endian='big'):
 
         kpoint_positions = np.zeros((num_kpoints, 3), dtype=np.float)
         num_eigenvalues = np.zeros(num_spins, dtype=np.int)
-        # Now we start to read lots of read numbers
+        # Now we start to read the actual data
         for nk in range(num_kpoints):
             _, kpoint_positions[nk, :] = fhandle.read_record('>i4', '>(3,)f8')
             for ns in range(num_spins):
@@ -73,8 +146,7 @@ def read_pdos_bin(filename, endian='big'):
     }
     return output
 
-
-def reorder_pdos_data(input_items):
+def reorder_pdos_data(input_items, pymatgen_labels=True, use_string_as_keys=False):
     """
     Arrange the PDOS weights so it is more meaningful
 
@@ -84,26 +156,45 @@ def reorder_pdos_data(input_items):
     Args:
         input_items (dict): A dictionary of the pdos information, use the
         output of  `read_pdos` function. 
+        pymatgen_labels (bool): Use pymatgen Enum as the keys of the result dictionary. 
+        
 
     Returns:
         A dictionary of {Site_index: {Orbital: {Spin: weight}}}
     """
-    from pymatgen.electronic_structure.core import Orbital, Spin
+    if pymatgen_labels is True:
+        try:
+            from pymatgen.electronic_structure.core import Orbital as POrbital
+            from pymatgen.electronic_structure.core import Spin as PSpin
+        except ImportError:
+            pymatgen_labels = False
 
-    # Note that s-p labels are inferreed from dot castep output
-    # f labels - I know the first three is among the first three.
-    # There is no way to tell if they are correct, f_1 is not very informative from VASP....
-    # TODO I should change these to CASTEP orbitals and privide mapping to that of the
-    # pymatgen
-    orbital_mapping = [[Orbital.s], [Orbital.px, Orbital.py, Orbital.pz],
-                       [
-                           Orbital.dz2, Orbital.dyz, Orbital.dxz, Orbital.dx2,
-                           Orbital.dxy
-                       ],
-                       [
-                           Orbital.f_1, Orbital.f_2, Orbital.f_3, Orbital.f0,
-                           Orbital.f1, Orbital.f2, Orbital.f3
-                       ]]
+    if pymatgen_labels:
+        # Note that s-p labels are inferreed from dot castep output
+        # f labels - I know the first three is among the first three.
+        # There is no way to tell if they are correct, f_1 is not very informative from VASP....
+        orbital_mapping = [[POrbital.s], [POrbital.px, POrbital.py, POrbital.pz],
+                        [
+                            POrbital.dz2, POrbital.dyz, POrbital.dxz, POrbital.dx2,
+                            POrbital.dxy
+                        ],
+                        [
+                            POrbital.f_1, POrbital.f_2, POrbital.f_3, POrbital.f0,
+                            POrbital.f1, POrbital.f2, POrbital.f3
+                        ]]
+        Spin = PSpin
+    else:
+        # These are the orders inferred from CASTEP output
+        orbital_mapping = [[OrbitalEnum.s], [OrbitalEnum.px, OrbitalEnum.py, OrbitalEnum.pz],
+                        [
+                            OrbitalEnum.dz2, OrbitalEnum.dyz, OrbitalEnum.dxz, OrbitalEnum.dx2,
+                            OrbitalEnum.dxy
+                        ],
+                        [
+                            OrbitalEnum.f_xxx, OrbitalEnum.f_yyy, OrbitalEnum.f_zzz, OrbitalEnum.f_xyz,
+                            OrbitalEnum.f_z_xx_yy, OrbitalEnum.f_y_zz_xx, OrbitalEnum.f_x_yy_zz
+                        ]]
+        Spin = SpinEnum
 
     # We take average of each kpoints from here
     # One might task why not take account the kpoints weight?
@@ -151,8 +242,9 @@ def reorder_pdos_data(input_items):
                         orb_dict[Spin.up] = weights[iloc, :, :, 0]
 
                     # Now we have the orb_dict populated
-                    if this_orb is orb_dict:
-                        site_dict[this_orb] = _merge_spin(
+                    # Combined the weights if this orbital has been seen...
+                    if this_orb in site_dict:
+                        site_dict[this_orb] = _merge_weights(
                             site_dict[this_orb], orb_dict)
                     else:
                         site_dict[this_orb] = orb_dict
@@ -194,8 +286,8 @@ def compute_pdos(pdos_bin, eigenvalues, kpoints_weights, bins):
     return pdos_data
 
 
-def _merge_spin(spin_d1, spin_d2):
-    """Merge two dictionary contenting the weights"""
+def _merge_weights(spin_d1, spin_d2):
+    """Sum the weights stored in two dictionaries with keys being the spins"""
     if len(spin_d1) != len(spin_d2):
         raise RuntimeError("Critical - mismatch spin-dict length")
     out = {}
