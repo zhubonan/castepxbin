@@ -32,7 +32,7 @@ def read_ome_bin(fname, num_bands, num_kpoints, num_spins, endian='big'):
     # double precision
     array_seg = '{}(3,{},{})c16'.format(esymbol, num_bands, num_bands)
 
-    om = np.zeros((num_spins, num_kpoints, 3, num_bands, num_bands), dtype=np.complex64)
+    om = np.zeros((num_spins, num_kpoints, 3, num_bands, num_bands), dtype=complex)
     with FortranFile(fname, header_dtype=np.dtype(f'{esymbol}u4')) as fhandle:
         version = fhandle.read_record(version_dtype)
         header = fhandle.read_record(header_dtype)[0].decode()
@@ -65,7 +65,7 @@ def read_cst_ome(fname, num_bands, num_kpoints, num_spins, endian='big'):
     # double precision
     elem = '{}c16'.format(esymbol, num_bands, num_bands)
 
-    om = np.zeros((num_spins, num_kpoints, 3, num_bands, num_bands), dtype=np.complex64)
+    om = np.zeros((num_spins, num_kpoints, 3, num_bands, num_bands), dtype=complex)
     with FortranFile(fname, header_dtype=np.dtype(f'{esymbol}u4')) as fhandle:
         for ki in range(num_kpoints):
             for si in range(num_spins):
