@@ -28,9 +28,15 @@ def test_pdos_reader(pdos_bin):
 
 def test_pdos_reorder(pdos_bin):
     """Test reordering of the PDOS"""
-    raw_output = read_pdos_bin(pdos_bin)
-    reordered = reorder_pdos_data(raw_output)
-    assert reordered[0][POrbital.s][PSpin.up].shape == (23, 110)
+    try:
+        from pymatgen.electronic_structure.core import Orbital as POrbital
+        from pymatgen.electronic_structure.core import Spin as PSpin
+    except ImportError:
+        pass
+    else:
+        raw_output = read_pdos_bin(pdos_bin)
+        reordered = reorder_pdos_data(raw_output)
+        assert reordered[0][POrbital.s][PSpin.up].shape == (23, 110)
 
     reordered = reorder_pdos_data(raw_output, pymatgen_labels=False)
     assert reordered[0][OrbitalEnum.s][SpinEnum.up].shape == (23, 110)
