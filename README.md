@@ -51,5 +51,5 @@ in the documentation of the open sourced [OptaDOS](https://github.com/optados-de
 
 ## Contributors
 
-Bonan Zhu, University College London, @zhubonan
-Matthew Evans, UCLouvain/University of Cambridge, @ml-evans
+- Bonan Zhu, University College London 
+- Matthew Evans, UCLouvain/University of Cambridge
