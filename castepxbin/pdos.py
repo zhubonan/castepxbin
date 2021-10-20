@@ -162,14 +162,17 @@ def reorder_pdos_data(input_items, pymatgen_labels=True, use_string_as_keys=Fals
     Returns:
         A dictionary of {Site_index: {Orbital: {Spin: weight}}}
     """
+    if pymatgen_labels is True:
+        try:
+            from pymatgen.electronic_structure.core import Orbital as POrbital
+            from pymatgen.electronic_structure.core import Spin as PSpin
+        except ImportError:
+            pymatgen_labels = False
+
     if pymatgen_labels:
-        from pymatgen.electronic_structure.core import Orbital as POrbital
-        from pymatgen.electronic_structure.core import Spin as PSpin
-    # Note that s-p labels are inferreed from dot castep output
-    # f labels - I know the first three is among the first three.
-    # There is no way to tell if they are correct, f_1 is not very informative from VASP....
-    # TODO I should change these to CASTEP orbitals and provided mapping to that of the
-    # pymatgen
+        # Note that s-p labels are inferreed from dot castep output
+        # f labels - I know the first three is among the first three.
+        # There is no way to tell if they are correct, f_1 is not very informative from VASP....
         orbital_mapping = [[POrbital.s], [POrbital.px, POrbital.py, POrbital.pz],
                         [
                             POrbital.dz2, POrbital.dyz, POrbital.dxz, POrbital.dx2,
