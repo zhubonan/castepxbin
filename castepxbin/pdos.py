@@ -9,7 +9,7 @@ from scipy.io import FortranFile
 
 
 @unique
-class Spin(Enum):
+class SpinEnum(Enum):
     """
     Enum type for Spin.  Only up and down.
     Usage: Spin.up, Spin.down.
@@ -44,15 +44,15 @@ class OrbitalType(Enum):
 
 
 @unique
-class Orbital(Enum):
+class OrbitalEnum(Enum):
     """
     Enum type for specific orbitals. The value are the name reported by CASTEP.
     """
 
     s = "S"
-    py = "Px"
-    pz = "Pz"
     px = "Px"
+    py = "Py"
+    pz = "Pz"
     dxy = "Dxy"
     dyz = "Dzy"
     dz2 = "Dzz"
@@ -163,32 +163,35 @@ def reorder_pdos_data(input_items, pymatgen_labels=True, use_string_as_keys=Fals
         A dictionary of {Site_index: {Orbital: {Spin: weight}}}
     """
     if pymatgen_labels:
-        from pymatgen.electronic_structure.core import Orbital, Spin
-
+        from pymatgen.electronic_structure.core import Orbital as POrbital
+        from pymatgen.electronic_structure.core import Spin as PSpin
     # Note that s-p labels are inferreed from dot castep output
     # f labels - I know the first three is among the first three.
     # There is no way to tell if they are correct, f_1 is not very informative from VASP....
-    # TODO I should change these to CASTEP orbitals and privide mapping to that of the
+    # TODO I should change these to CASTEP orbitals and provided mapping to that of the
     # pymatgen
-        orbital_mapping = [[Orbital.s], [Orbital.px, Orbital.py, Orbital.pz],
+        orbital_mapping = [[POrbital.s], [POrbital.px, POrbital.py, POrbital.pz],
                         [
-                            Orbital.dz2, Orbital.dyz, Orbital.dxz, Orbital.dx2,
-                            Orbital.dxy
+                            POrbital.dz2, POrbital.dyz, POrbital.dxz, POrbital.dx2,
+                            POrbital.dxy
                         ],
                         [
-                            Orbital.f_1, Orbital.f_2, Orbital.f_3, Orbital.f0,
-                            Orbital.f1, Orbital.f2, Orbital.f3
+                            POrbital.f_1, POrbital.f_2, POrbital.f_3, POrbital.f0,
+                            POrbital.f1, POrbital.f2, POrbital.f3
                         ]]
+        Spin = PSpin
     else:
-        orbital_mapping = [[Orbital.s], [Orbital.px, Orbital.py, Orbital.pz],
+        # These are the orders inferred from CASTEP output
+        orbital_mapping = [[OrbitalEnum.s], [OrbitalEnum.px, OrbitalEnum.py, OrbitalEnum.pz],
                         [
-                            Orbital.dz2, Orbital.dyz, Orbital.dxz, Orbital.dx2,
-                            Orbital.dxy
+                            OrbitalEnum.dz2, OrbitalEnum.dyz, OrbitalEnum.dxz, OrbitalEnum.dx2,
+                            OrbitalEnum.dxy
                         ],
                         [
-                            Orbital.f_xxx, Orbital.f_yyy, Orbital.f_zzz, Orbital.f_xyz,
-                            Orbital.f_z_xx_yy, Orbital.f_y_zz_xx, Orbital.f_x_yy_zz
+                            OrbitalEnum.f_xxx, OrbitalEnum.f_yyy, OrbitalEnum.f_zzz, OrbitalEnum.f_xyz,
+                            OrbitalEnum.f_z_xx_yy, OrbitalEnum.f_y_zz_xx, OrbitalEnum.f_x_yy_zz
                         ]]
+        Spin = SpinEnum
 
     # We take average of each kpoints from here
     # One might task why not take account the kpoints weight?

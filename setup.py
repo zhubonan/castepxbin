@@ -27,6 +27,6 @@ if __name__ == '__main__':
         url="https://github.com/zhubonan/castepxbin",
         license="MIT License",
         version=version,
-        extras_require={'testing': ['pytest', 'pymatgen'], 'pdos-order': ['pymatgen']},
+        extras_require={'testing': ['pytest', 'pymatgen']},
         install_requires=["numpy>=1,<2", "scipy>=1,<2"]
         )
