@@ -115,10 +115,10 @@ def read_pdos_bin(filename, endian='big'):
         # Now we initialize the storage space for the weights
         pdos_weights = np.zeros(
             (num_popn_orb, max_eignenv, num_kpoints, num_spins),
-            dtype=np.float)
+            dtype=float)
 
-        kpoint_positions = np.zeros((num_kpoints, 3), dtype=np.float)
-        num_eigenvalues = np.zeros(num_spins, dtype=np.int)
+        kpoint_positions = np.zeros((num_kpoints, 3), dtype=float)
+        num_eigenvalues = np.zeros(num_spins, dtype=int)
         # Now we start to read the actual data
         for nk in range(num_kpoints):
             _, kpoint_positions[nk, :] = fhandle.read_record('>i4', '>(3,)f8')

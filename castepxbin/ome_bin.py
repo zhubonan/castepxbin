@@ -76,3 +76,26 @@ def read_cst_ome(fname, num_bands, num_kpoints, num_spins, endian='big'):
         out = fhandle._fp.read()
         assert out == b"", "More data exist beyond the specified sizes."
     return om
+
+
+def read_dome_bin(fname, num_bands, num_kpoints, num_spins, endian="BIG"):
+    """
+    Read the dome_bin file
+    """
+
+    # Each complex number takes 2*8 bits - both real and imaginary parts are 
+    # double precision
+    esymbol = '>' if endian.upper() == 'BIG' else '<'
+    version_dtype = '{}f8'.format(esymbol)
+    header_dtype = '{}a80'.format(esymbol)
+    array_seg = '{}(3,{})f8'.format(esymbol, num_bands)
+
+    dom = np.zeros((num_spins, num_kpoints, 3, num_bands), dtype=float)
+    with FortranFile(fname, header_dtype=np.dtype(f'{esymbol}u4')) as fhandle:
+        version = fhandle.read_record(version_dtype)
+        header = fhandle.read_record(header_dtype)[0].decode()
+        for ki in range(num_kpoints):
+            for si in range(num_spins):
+                d = fhandle.read_record(array_seg)
+                dom[si, ki, :, :] = d
+    return version[0], header, dom

@@ -7,7 +7,7 @@ import numpy as np
 import scipy.constants
 
 from .pdos import read_pdos_bin, reorder_pdos_data, OrbitalEnum, SpinEnum
-from .ome_bin import read_ome_bin, read_cst_ome
+from .ome_bin import read_dome_bin, read_ome_bin, read_cst_ome
 from .castep_bin import read_castep_bin
 
 
@@ -15,13 +15,21 @@ from .castep_bin import read_castep_bin
 def pdos_bin():
     return os.path.join(os.path.split(__file__)[0], 'test_data/Si2.pdos_bin')
 
+
 @pytest.fixture
 def ome_bin():
     return os.path.join(os.path.split(__file__)[0], 'test_data/Si2.ome_bin')
 
+
 @pytest.fixture
 def cst_ome():
     return os.path.join(os.path.split(__file__)[0], 'test_data/Si2.cst_ome')
+
+
+@pytest.fixture
+def dome_bin():
+    return os.path.join(os.path.split(__file__)[0], 'test_data/Si2.dome_bin')
+
 
 @pytest.fixture
 def bands_file():
@@ -144,3 +152,13 @@ def test_cst_ome(cst_ome):
     om = read_cst_ome(cst_ome, 23, 2, 1)
     assert om.shape == (1, 2, 3, 23, 23)
     assert np.imag(om[0, 0, 1, -1, -1]) == pytest.approx(0.0)
+
+def test_dome_bin(dome_bin):
+    """Test reading ome_bin file"""
+    v, header, dom = read_dome_bin(dome_bin, 23, 2, 1)
+
+    assert "CASTEP" in header
+    assert v == pytest.approx(1.0)
+
+    assert dom.shape == (1, 2, 3, 23)
+    assert dom[0, 0, 0, 0] == pytest.approx(-0.09854794)
