@@ -2,7 +2,7 @@
 
 ## Overview
 
-A collection of readers for binary output from [CASTEP](www.castep.org).
+A collection of readers for binary output from [CASTEP](http://www.castep.org).
 
 Available readers for:
 
