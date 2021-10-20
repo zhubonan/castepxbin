@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from os import path
 import os
 
-version = '0.1.0'
+version = '0.2.0'
 if __name__ == '__main__':
 
     README_PATH = path.join(path.dirname(__file__), "README.md")
