@@ -44,6 +44,38 @@ The two main dependencies are `numpy` and `scipy`.
 The optional `pymatgen` dependency is used for naming the orbitals.
 Please note that the consistency of these labels for the f orbitals has not been checked.
 
+## Usage 
+
+Simple import the function and pass the file path:
+
+```python
+In [1]: from castepxbin import read_castep_bin
+
+In [2]: read_castep_bin("test_data/SiO2.castep_bin")
+Out[2]: 
+{'num_ions': 6,
+ 'max_ions_in_species': 4,
+ 'num_species': 2,
+ 'forces': array([[[ 3.32997451e-06, -1.00275146e-05],
+         [ 7.92892004e-03,  3.53575656e-06],
+         [ 3.36312207e-06,  0.00000000e+00],
+         [-7.92912137e-03,  0.00000000e+00]],
+ 
+        [[-7.93383055e-03,  1.66276581e-06],
+         [ 5.54741296e-06,  7.35537943e-06],
+         [ 7.92752830e-03,  0.00000000e+00],
+         [-8.26331396e-06,  0.00000000e+00]],
+ 
+        [[ 1.24161378e-06, -1.29568770e-06],
+         [ 1.09647888e-06,  1.87501556e-06],
+         [-3.54153006e-06,  0.00000000e+00],
+         [ 6.24109535e-07,  0.00000000e+00]]])}
+```
+
+Note that these readers should be considered as "low-level" as they will read the data as it is in most cases, with the forces given above as one example. Further processes are often needed.
+
+Once exception is the optical matrix element readers, where output array are converted into the "C" (row-major) ordering.
+
 ## Acknowledgement
 
 The structure of the binary `pdos_bin`, `dome_bin`, `ome_bin`, `cst_esp` file is inferred from the code snippet
