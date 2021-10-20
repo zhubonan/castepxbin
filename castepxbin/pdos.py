@@ -119,7 +119,7 @@ def read_pdos_bin(filename, endian='big'):
 
         kpoint_positions = np.zeros((num_kpoints, 3), dtype=np.float)
         num_eigenvalues = np.zeros(num_spins, dtype=np.int)
-        # Now we start to read lots of read numbers
+        # Now we start to read the actual data
         for nk in range(num_kpoints):
             _, kpoint_positions[nk, :] = fhandle.read_record('>i4', '>(3,)f8')
             for ns in range(num_spins):
