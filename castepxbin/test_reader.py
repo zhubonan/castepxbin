@@ -112,7 +112,6 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
         "phonon_supercell_matrix",
         "phonon_force_constant_matrix",
         "phonon_supercell_origins",
-        "phonon_force_constant_row"
     )
     assert all(field in data for field in expected_fields)
     assert data["phonon_force_constant_matrix"].shape == (3, data["num_ions"], 3, data["num_ions"], data["num_cells"])
@@ -138,6 +137,22 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
     np.testing.assert_array_almost_equal(expected_forces[0:4], data["forces"][:, :, 0].T)
     np.testing.assert_array_almost_equal(expected_forces[4:], data["forces"][:, :, 1].T[:2, :])
 
+
+    # Test reading all fields
+    data = read_castep_bin(castep_bin_SiO2, records_to_extract=None)
+    expected_fields = (
+        "num_ions",
+        "real_lattice",
+        "recip_lattice",
+        "num_ions_in_species",
+        "ionic_positions",
+        "species_symbol",
+        "num_species",
+    )
+
+    for field in expected_fields:
+        assert field in data
+    assert isinstance(data['num_species'], np.ndarray) 
 
 def test_ome_bin(ome_bin):
     """Test reading ome_bin file"""

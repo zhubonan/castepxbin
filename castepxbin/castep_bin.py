@@ -30,8 +30,23 @@ CASTEP_BIN_HEADERS = {
     "CELL%MAX_IONS_IN_SPECIES": {
         "max_ions_in_species": (">i4", (1,))
     },
+    "CELL%REAL_LATTICE": {
+        "real_lattice": (">f8", (3,3))
+    },
+    "CELL%RECIP_LATTICE": {
+        "recip_lattice": (">f8", (3,3))
+    },
     "CELL%NUM_SPECIES": {
         "num_species": (">i4", (1,))
+    },
+    "CELL%NUM_IONS_IN_SPECIES": {
+        "num_ions_in_species": (">i4", ("num_species", ))
+    },
+    "CELL%IONIC_POSITIONS": {
+        "ionic_positions": (">f8", (3, "max_ions_in_species", "num_species"))
+    },
+    "CELL%SPECIES_SYMBOL": {
+        "species_symbol": (">a8", ("num_species",))
     },
     "FORCES": {
         "forces": (">f8", (3, "max_ions_in_species", "num_species"))
