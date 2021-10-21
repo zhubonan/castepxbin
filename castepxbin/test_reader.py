@@ -152,7 +152,9 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
 
     for field in expected_fields:
         assert field in data
-    assert isinstance(data['num_species'], np.ndarray) 
+    assert data['num_species'] == 2
+    assert data['ionic_positions'].shape == (3, data['max_ions_in_species'], data['num_species'])
+    assert data['species_symbol'] == ['O', 'Si']
 
 def test_ome_bin(ome_bin):
     """Test reading ome_bin file"""

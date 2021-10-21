@@ -34,6 +34,7 @@ class FieldType:
 
 class ScalarField(FieldType):
     """Abstract Representation of sclar type"""
+
     def __init__(self, name, dtype, endian='BIG'):
         """Instantiate an scalar field"""
 
@@ -44,13 +45,31 @@ class ScalarField(FieldType):
 
         self.type_string = f"{ed}{dtype}"
 
+    @property
+    def shape(self):
+        return (1,)
+
 class ArrayField(ScalarField):
     """Abstract Representation of a Array type"""
 
     def __init__(self, name, dtype, shape, endian='BIG'):
         """Instantiate an array field"""
         super().__init__(name, dtype, endian)
+        self._shape = shape
+
+    @property
+    def shape(self):
+        return self._shape
+
+class StrField(ScalarField):
+    """Abstract Representation of a Array type"""
+    shape = (1,)
+
+    def __init__(self, name, dtype, shape, endian='BIG'):
+        """Instantiate an array field"""
+        super().__init__(name, dtype, endian)
         self.shape = shape
+
 
 # Defines the location of field relative to the tags
 CASTEP_BIN_FIELD_SPEC = {
@@ -62,14 +81,14 @@ CASTEP_BIN_FIELD_SPEC = {
     "CELL%NUM_IONS_IN_SPECIES": (ArrayField("num_ions_in_species", int, ("num_species", )), ),
     "CELL%IONIC_POSITIONS": (ArrayField("ionic_positions", float, (3, "max_ions_in_species", "num_speices")),),
     "CELL%SPECIES_SYMBOL": (ArrayField("species_symbol", 'a8', ("num_species", )),),
-    "FORCES": (ArrayField("forces", float, (3, "max_ions_in_species", "num_species"))),
+    "FORCES": (ArrayField("forces", float, (3, "max_ions_in_species", "num_species")), ),
     "FORCE_CON": (
         ArrayField("phonon_supercell_matrix", int, (3,3)),
         ArrayField("phonon_force_constant_matrix", float, (3, "num_ions", 3, "num_ions", "num_cells")),
         ArrayField("phonon_supercell_origins", int, (3, "num_cells")),
         ScalarField("phonon_force_constant_row", int)
     ),
-    "BORN_CHGS":(ArrayField("born_charges", float, (3,3, "num_ions")))
+    "BORN_CHGS":(ArrayField("born_charges", float, (3,3, "num_ions")), )
 }
 
 # Shape of each field
@@ -168,7 +187,7 @@ def read_castep_bin(
 
     castep_data = {}
 
-    for header in CASTEP_BIN_HEADERS:
+    for header in CASTEP_BIN_FIELD_SPEC:
 
         if records_to_extract and header not in records_to_extract:
             continue
@@ -182,7 +201,7 @@ def read_castep_bin(
             castep_data.update(
                 _decode_records(
                     f,
-                    CASTEP_BIN_HEADERS[header],
+                    CASTEP_BIN_FIELD_SPEC[header],
                     header_offset_map[header],
                     castep_data,
                 )
@@ -249,7 +268,7 @@ def _reshape_arrays(castep_data: Dict[str, Any], _requires: Optional[dict] = Non
 
 def _decode_records(
     fp: io.BufferedReader,
-    record_spec: Dict[str, Tuple[int, Tuple]],
+    record_specs: Tuple[FieldType],
     offset: int,
     castep_data: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -279,20 +298,33 @@ def _decode_records(
 
     decoded_data = {}
     fp.seek(offset)
-    for subrecord in record_spec:
-        dtype, shape = record_spec[subrecord]
+    for record_spec in record_specs:
+        record_name = record_spec.name
+        dtype, shape = record_spec.type_string, record_spec.shape
 
         # Read the data record and marker and calculate the total number of array elements
         record_data, marker = _read_record(fp)
         count = marker // int(dtype[-1])
-        decoded_data[subrecord] = np.frombuffer(
+        decoded_data[record_name] = np.frombuffer(
             record_data, np.dtype(dtype), count=count
         )
 
-        # Unpack single-valued data
-        if shape == (1,):
-            assert decoded_data[subrecord].shape == (1,)
-            decoded_data[subrecord] = decoded_data[subrecord].tolist()[0]
+        # Convert to python string
+        if isinstance(record_spec, StrField):
+            assert decoded_data[record_name].shape == (1,)
+            decoded_data[record_name] = decoded_data[record_name].tolist()[0].decode().strip()
+
+        # Convert 1D String arrays to a list of python strings
+        if isinstance(record_spec, ArrayField) and 'a' in dtype and len(shape) == 1:
+            assert decoded_data[record_name].ndim == 1
+            decoded_data[record_name] = [tmp.decode().strip() for tmp in decoded_data[record_name]]
+
+
+        # Unpack single-valued data - but only for scalar field
+        if shape == (1,) and isinstance(record_spec, ScalarField):
+            assert decoded_data[record_name].shape == (1,)
+            decoded_data[record_name] = decoded_data[record_name].tolist()[0]
+        # For decode strings
 
     return decoded_data
 
