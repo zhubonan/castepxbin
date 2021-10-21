@@ -22,6 +22,62 @@ import numpy as np
 
 __all__ = ("read_castep_bin",)
 
+TYPE_MAP = {
+    int: "i4",
+    float: "f8",
+    complex: "c16",
+}
+
+class FieldType:
+    """Abstract representation of the field type"""
+    pass
+
+class ScalarField(FieldType):
+    """Abstract Representation of sclar type"""
+    def __init__(self, name, dtype, endian='BIG'):
+        """Instantiate an scalar field"""
+
+        self.name = name
+        ed = ">" if endian.lower() == "big" else "<"
+        if dtype in TYPE_MAP:
+            dtype = TYPE_MAP[dtype]
+
+        self.type_string = f"{ed}{dtype}"
+
+class ArrayField(ScalarField):
+    """Abstract Representation of a Array type"""
+
+    def __init__(self, name, dtype, shape, endian='BIG'):
+        """Instantiate an array field"""
+        super().__init__(name, dtype, endian)
+        self.shape = shape
+
+# Defines the location of field relative to the tags
+CASTEP_BIN_FIELD_SPEC = {
+    "CELL%NUM_IONS": (ScalarField("num_ions", int), ),
+    "CELL%MAX_IONS_IN_SPECIES": (ScalarField("max_ions_in_species", int), ),
+    "CELL%REAL_LATTICE": (ArrayField("real_lattice", float, (3,3,)), ),
+    "CELL%RECIP_LATTICE": (ArrayField("recip_lattice", float, (3,3,)), ),
+    "CELL%NUM_SPEICES": (ScalarField("num_species", int), ),
+    "CELL%NUM_IONS_IN_SPECIES": (ArrayField("num_ions_in_species", int, ("num_species", )), ),
+    "CELL%IONIC_POSITIONS": (ArrayField("ionic_positions", float, (3, "max_ions_in_species", "num_speices")),),
+    "CELL%SPECIES_SYMBOL": (ArrayField("species_symbol", 'a8', ("num_species", )),),
+    "FORCES": (ArrayField("forces", float, (3, "max_ions_in_species", "num_species"))),
+    "FORCE_CON": (
+        ArrayField("phonon_supercell_matrix", int, (3,3)),
+        ArrayField("phonon_force_constant_matrix", float, (3, "num_ions", 3, "num_ions", "num_cells")),
+        ArrayField("phonon_supercell_origins", int, (3, "num_cells")),
+        ScalarField("phonon_force_constant_row", int)
+    ),
+    "BORN_CHGS":(ArrayField("born_charges", float, (3,3, "num_ions")))
+}
+
+# Shape of each field
+CASTEP_BIN_FIELD_SHAPES = {
+    field.name: field.shape for tag in CASTEP_BIN_FIELD_SPEC 
+        for field in CASTEP_BIN_FIELD_SPEC[tag] 
+            if isinstance(field, ArrayField)
+}
 
 CASTEP_BIN_HEADERS = {
     "CELL%NUM_IONS": {
