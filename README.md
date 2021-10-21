@@ -78,7 +78,7 @@ Once exception is the optical matrix element readers, where output array are con
 
 ## Acknowledgement
 
-The data structures of binary `pdos_bin`, `dome_bin`, `ome_bin`, `cst_esp` files are inferred from the code snippet
+The data structures of binary `pdos_bin`, `dome_bin`, `ome_bin`, files are inferred from the code snippet
 in the documentation of the open sourced [OptaDOS](https://github.com/optados-developers/optados) package for computing high quality DOS and other spectral properties using outputs from CASTEP.
 
 ## Contributors
