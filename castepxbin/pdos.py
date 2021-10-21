@@ -7,6 +7,10 @@ from enum import Enum, unique
 import numpy as np
 from scipy.io import FortranFile
 
+__all__ = ["read_pdos_bin", "compute_pdos"]
+
+# pylint: disable=import-outside-toplevel, too-many-locals, too-many-branches
+
 
 @unique
 class SpinEnum(Enum):
@@ -33,14 +37,13 @@ class OrbitalType(Enum):
     number, l.
     """
 
-    s = 0
-    p = 1
-    d = 2
-    f = 3
+    s = 0  # pylint: disable=invalid-name
+    p = 1  # pylint: disable=invalid-name
+    d = 2  # pylint: disable=invalid-name
+    f = 3  # pylint: disable=invalid-name
 
     def __str__(self):
         return str(self.name)
-
 
 
 @unique
@@ -49,7 +52,7 @@ class OrbitalEnum(Enum):
     Enum type for specific orbitals. The value are the name reported by CASTEP.
     """
 
-    s = "S"
+    s = "S"  # pylint: disable=invalid-name
     px = "Px"
     py = "Py"
     pz = "Pz"
@@ -77,7 +80,7 @@ class OrbitalEnum(Enum):
         """
         Returns OrbitalType of an orbital.
         """
-        return OrbitalType[self.name[0]]
+        return OrbitalType[self.name[0]]  # pylint: disable=unsubscriptable-object
 
 
 def read_pdos_bin(filename, endian='big'):
@@ -97,7 +100,6 @@ def read_pdos_bin(filename, endian='big'):
     ddouble = np.dtype(esymbol + 'f8')
     dch80 = np.dtype(esymbol + 'a80')
     diarray = lambda x: '{}({},)i4'.format(esymbol, x)
-    ddarray = lambda x: '{}({},)f8'.format(esymbol, x)
 
     with FortranFile(filename, header_dtype=np.dtype('>u4')) as fhandle:
         fversion = fhandle.read_record(ddouble)[0]
@@ -114,8 +116,7 @@ def read_pdos_bin(filename, endian='big'):
 
         # Now we initialize the storage space for the weights
         pdos_weights = np.zeros(
-            (num_popn_orb, max_eignenv, num_kpoints, num_spins),
-            dtype=float)
+            (num_popn_orb, max_eignenv, num_kpoints, num_spins), dtype=float)
 
         kpoint_positions = np.zeros((num_kpoints, 3), dtype=float)
         num_eigenvalues = np.zeros(num_spins, dtype=int)
@@ -142,11 +143,13 @@ def read_pdos_bin(filename, endian='big'):
         'pdos_weights': pdos_weights,
         'kpoints_positions': kpoint_positions,
         'num_eigenvalues': num_eigenvalues,
-        'pdos_weights': pdos_weights,
     }
     return output
 
-def reorder_pdos_data(input_items, pymatgen_labels=True, use_string_as_keys=False):
+
+def reorder_pdos_data(input_items,
+                      pymatgen_labels=True,
+                      use_string_as_keys=False):
     """
     Arrange the PDOS weights so it is more meaningful
 
@@ -155,13 +158,15 @@ def reorder_pdos_data(input_items, pymatgen_labels=True, use_string_as_keys=Fals
 
     Args:
         input_items (dict): A dictionary of the pdos information, use the
-        output of  `read_pdos` function. 
-        pymatgen_labels (bool): Use pymatgen Enum as the keys of the result dictionary. 
-        
+        output of  `read_pdos` function.
+        pymatgen_labels (bool): Use pymatgen Enum as the keys of the result dictionary.
+
 
     Returns:
         A dictionary of {Site_index: {Orbital: {Spin: weight}}}
     """
+
+    _ = use_string_as_keys
     if pymatgen_labels is True:
         try:
             from pymatgen.electronic_structure.core import Orbital as POrbital
@@ -173,27 +178,33 @@ def reorder_pdos_data(input_items, pymatgen_labels=True, use_string_as_keys=Fals
         # Note that s-p labels are inferreed from dot castep output
         # f labels - I know the first three is among the first three.
         # There is no way to tell if they are correct, f_1 is not very informative from VASP....
-        orbital_mapping = [[POrbital.s], [POrbital.px, POrbital.py, POrbital.pz],
-                        [
-                            POrbital.dz2, POrbital.dyz, POrbital.dxz, POrbital.dx2,
-                            POrbital.dxy
-                        ],
-                        [
-                            POrbital.f_1, POrbital.f_2, POrbital.f_3, POrbital.f0,
-                            POrbital.f1, POrbital.f2, POrbital.f3
-                        ]]
+        orbital_mapping = [[POrbital.s],
+                           [POrbital.px, POrbital.py, POrbital.pz],
+                           [
+                               POrbital.dz2, POrbital.dyz, POrbital.dxz,
+                               POrbital.dx2, POrbital.dxy
+                           ],
+                           [
+                               POrbital.f_1, POrbital.f_2, POrbital.f_3,
+                               POrbital.f0, POrbital.f1, POrbital.f2,
+                               POrbital.f3
+                           ]]
         Spin = PSpin
     else:
         # These are the orders inferred from CASTEP output
-        orbital_mapping = [[OrbitalEnum.s], [OrbitalEnum.px, OrbitalEnum.py, OrbitalEnum.pz],
-                        [
-                            OrbitalEnum.dz2, OrbitalEnum.dyz, OrbitalEnum.dxz, OrbitalEnum.dx2,
-                            OrbitalEnum.dxy
-                        ],
-                        [
-                            OrbitalEnum.f_xxx, OrbitalEnum.f_yyy, OrbitalEnum.f_zzz, OrbitalEnum.f_xyz,
-                            OrbitalEnum.f_z_xx_yy, OrbitalEnum.f_y_zz_xx, OrbitalEnum.f_x_yy_zz
-                        ]]
+        orbital_mapping = [[OrbitalEnum.s],
+                           [OrbitalEnum.px, OrbitalEnum.py, OrbitalEnum.pz],
+                           [
+                               OrbitalEnum.dz2, OrbitalEnum.dyz,
+                               OrbitalEnum.dxz, OrbitalEnum.dx2,
+                               OrbitalEnum.dxy
+                           ],
+                           [
+                               OrbitalEnum.f_xxx, OrbitalEnum.f_yyy,
+                               OrbitalEnum.f_zzz, OrbitalEnum.f_xyz,
+                               OrbitalEnum.f_z_xx_yy, OrbitalEnum.f_y_zz_xx,
+                               OrbitalEnum.f_x_yy_zz
+                           ]]
         Spin = SpinEnum
 
     # We take average of each kpoints from here
@@ -213,7 +224,7 @@ def reorder_pdos_data(input_items, pymatgen_labels=True, use_string_as_keys=Fals
     site_index = 0
     output_data = {}
     # Initialise storage space
-    for specie in unique_speices:
+    for specie in unique_speices:  # pylint: disable=too-many-nested-blocks
         specie_mask = specie == species
         # Total number of ions for this specie
         total_ions = ion[specie_mask].max()
@@ -258,7 +269,7 @@ def reorder_pdos_data(input_items, pymatgen_labels=True, use_string_as_keys=Fals
 def compute_pdos(pdos_bin, eigenvalues, kpoints_weights, bins):
     """
     Compute the PDOS from eigenvalue and kpoint weights
-    
+
     Args:
         pdos_bin (str): Path to the binary pdos_bin file
         eigenvealues (str): Eigenvalue as {Spin: array_)}.

@@ -1,0 +1,20 @@
+doc-warnings: true
+
+ignore-paths:
+  - docs
+  - .github
+  - examples
+  - test
+  - aiida_castep/tests
+  - utils
+  - cookiecutters
+
+pylint:
+  max-line-length: 140
+
+mccabe:
+  disable:
+  - MC0001
+
+pep257:
+  run: false

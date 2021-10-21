@@ -12,6 +12,8 @@ the [Euphonic](https://github.com/pace-neutrons/Euphonic) package.
 
 """
 
+# pylint: disable=invalid-name,too-few-public-methods
+
 from typing import Union, Dict, Any, Tuple, Collection, Optional
 from pathlib import Path
 from struct import unpack
@@ -30,7 +32,6 @@ TYPE_MAP = {
 
 class FieldType:
     """Abstract representation of the field type"""
-    pass
 
 
 class ScalarField(FieldType):
@@ -40,8 +41,7 @@ class ScalarField(FieldType):
 
         self.name = name
         ed = ">" if endian.lower() == "big" else "<"
-        if dtype in TYPE_MAP:
-            dtype = TYPE_MAP[dtype]
+        dtype = TYPE_MAP.get(dtype, dtype)
 
         self.type_string = f"{ed}{dtype}"
 
@@ -288,7 +288,7 @@ def _reshape_arrays(castep_data: Dict[str, Any],
         ]
     # If all remaining fields have more than 1 unknown, give up
     if _requires and all(
-        [len(set(_requires[field])) > 1 for field in _requires]):
+            len(set(_requires[field])) > 1 for field in _requires):  # pylint: disable=bad-continuation
         raise RuntimeError(f"Too many unknowns to resolve: {_requires}")
 
     while _requires:
