@@ -110,51 +110,51 @@ CASTEP_BIN_FIELD_SHAPES = {
     if isinstance(field, ArrayField)
 }
 
-CASTEP_BIN_HEADERS = {
-    "CELL%NUM_IONS": {
-        "num_ions": (">i4", (1, ))
-    },
-    "CELL%MAX_IONS_IN_SPECIES": {
-        "max_ions_in_species": (">i4", (1, ))
-    },
-    "CELL%REAL_LATTICE": {
-        "real_lattice": (">f8", (3, 3))
-    },
-    "CELL%RECIP_LATTICE": {
-        "recip_lattice": (">f8", (3, 3))
-    },
-    "CELL%NUM_SPECIES": {
-        "num_species": (">i4", (1, ))
-    },
-    "CELL%NUM_IONS_IN_SPECIES": {
-        "num_ions_in_species": (">i4", ("num_species", ))
-    },
-    "CELL%IONIC_POSITIONS": {
-        "ionic_positions": (">f8", (3, "max_ions_in_species", "num_species"))
-    },
-    "CELL%SPECIES_SYMBOL": {
-        "species_symbol": (">a8", ("num_species", ))
-    },
-    "FORCES": {
-        "forces": (">f8", (3, "max_ions_in_species", "num_species"))
-    },
-    "FORCE_CON": {
-        "phonon_supercell_matrix": (">i4", (3, 3)),
-        "phonon_force_constant_matrix":
-        (">f8", (3, "num_ions", 3, "num_ions", "num_cells")),
-        "phonon_supercell_origins": (">i4", (3, "num_cells")),
-        "phonon_force_constant_row": (">i4", (1, )),
-    },
-    "BORN_CHGS": {
-        "born_charges": (">f8", (3, 3, "num_ions")),
-    },
-}
+# CASTEP_BIN_HEADERS = {
+#     "CELL%NUM_IONS": {
+#         "num_ions": (">i4", (1, ))
+#     },
+#     "CELL%MAX_IONS_IN_SPECIES": {
+#         "max_ions_in_species": (">i4", (1, ))
+#     },
+#     "CELL%REAL_LATTICE": {
+#         "real_lattice": (">f8", (3, 3))
+#     },
+#     "CELL%RECIP_LATTICE": {
+#         "recip_lattice": (">f8", (3, 3))
+#     },
+#     "CELL%NUM_SPECIES": {
+#         "num_species": (">i4", (1, ))
+#     },
+#     "CELL%NUM_IONS_IN_SPECIES": {
+#         "num_ions_in_species": (">i4", ("num_species", ))
+#     },
+#     "CELL%IONIC_POSITIONS": {
+#         "ionic_positions": (">f8", (3, "max_ions_in_species", "num_species"))
+#     },
+#     "CELL%SPECIES_SYMBOL": {
+#         "species_symbol": (">a8", ("num_species", ))
+#     },
+#     "FORCES": {
+#         "forces": (">f8", (3, "max_ions_in_species", "num_species"))
+#     },
+#     "FORCE_CON": {
+#         "phonon_supercell_matrix": (">i4", (3, 3)),
+#         "phonon_force_constant_matrix":
+#         (">f8", (3, "num_ions", 3, "num_ions", "num_cells")),
+#         "phonon_supercell_origins": (">i4", (3, "num_cells")),
+#         "phonon_force_constant_row": (">i4", (1, )),
+#     },
+#     "BORN_CHGS": {
+#         "born_charges": (">f8", (3, 3, "num_ions")),
+#     },
+# }
 
-CASTEP_BIN_HEADERS_UNPACKED = {
-    k: v
-    for header in CASTEP_BIN_HEADERS
-    for k, v in CASTEP_BIN_HEADERS[header].items()
-}
+# CASTEP_BIN_HEADERS_UNPACKED = {
+#     k: v
+#     for header in CASTEP_BIN_HEADERS
+#     for k, v in CASTEP_BIN_HEADERS[header].items()
+# }
 
 
 def read_castep_bin(filename: Union[str, Path],
@@ -221,7 +221,6 @@ def read_castep_bin(filename: Union[str, Path],
                     f,
                     CASTEP_BIN_FIELD_SPEC[header],
                     header_offset_map[header],
-                    castep_data,
                 ))
 
     _reshape_arrays(castep_data)
@@ -241,7 +240,7 @@ def _reshape_arrays(castep_data: Dict[str, Any],
 
     Args:
         castep_data: The dictionary of decoded but un-reshaped data, with keys
-            from `CASTEP_BIN_HEADERS_UNPACKED`.
+            from `CASTEP_BIN_FIELD_SHAPES`.
         _requires: Cache of remaining unknowns used for recursion.
 
     """
@@ -252,8 +251,7 @@ def _reshape_arrays(castep_data: Dict[str, Any],
         if isinstance(castep_data[field], np.ndarray) and len(
                 castep_data[field].shape) == 1:
             shape = [
-                castep_data.get(s) or s
-                for s in CASTEP_BIN_HEADERS_UNPACKED[field][1]
+                castep_data.get(s) or s for s in CASTEP_BIN_FIELD_SHAPES[field]
             ]
             _requires[field] = [s for s in shape if isinstance(s, str)]
 
@@ -284,10 +282,9 @@ def _reshape_arrays(castep_data: Dict[str, Any],
     castep_data.update(resolved_unknowns)
     for field in _requires:
         _requires[field] = [
-            s for s in [
-                castep_data.get(s) or s
-                for s in CASTEP_BIN_HEADERS_UNPACKED[field][1]
-            ] if isinstance(s, str)
+            s for s in
+            [castep_data.get(s) or s for s in CASTEP_BIN_FIELD_SHAPES[field]]
+            if isinstance(s, str)
         ]
     # If all remaining fields have more than 1 unknown, give up
     if _requires and all(
@@ -302,7 +299,6 @@ def _decode_records(
         fp: io.BufferedReader,
         record_specs: Tuple[FieldType],
         offset: int,
-        castep_data: Dict[str, Any],
 ) -> Dict[str, Any]:
     """For a given file buffer, header name and byte offset, read
     the expected number of file records and decode them according to
@@ -319,8 +315,6 @@ def _decode_records(
             These unknowns will be resolved where possible and returned
             in the final output dictionary.
         offset: The byte offset at which the records start in the buffer.
-        castep_data: Any already decoded data to be used to resolve
-            unknown dimensions.
 
     Returns:
         A dictionary containing the decoded data, and any named unknowns
@@ -426,7 +420,7 @@ def _read_record(
         record exceeded the chosen size.
 
     """
-    marker = _read_marker(f)
+    marker = _read_marker(f, record_marker_size=record_marker_size)
     data = None
     if marker <= read_data_smaller_than or not seek_only:
         data = f.read(marker)
