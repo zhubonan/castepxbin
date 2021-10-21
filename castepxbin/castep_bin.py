@@ -19,8 +19,7 @@ import io
 
 import numpy as np
 
-
-__all__ = ("read_castep_bin",)
+__all__ = ("read_castep_bin", )
 
 TYPE_MAP = {
     int: "i4",
@@ -28,13 +27,14 @@ TYPE_MAP = {
     complex: "c16",
 }
 
+
 class FieldType:
     """Abstract representation of the field type"""
     pass
 
+
 class ScalarField(FieldType):
     """Abstract Representation of sclar type"""
-
     def __init__(self, name, dtype, endian='BIG'):
         """Instantiate an scalar field"""
 
@@ -47,11 +47,11 @@ class ScalarField(FieldType):
 
     @property
     def shape(self):
-        return (1,)
+        return (1, )
+
 
 class ArrayField(ScalarField):
     """Abstract Representation of a Array type"""
-
     def __init__(self, name, dtype, shape, endian='BIG'):
         """Instantiate an array field"""
         super().__init__(name, dtype, endian)
@@ -61,9 +61,10 @@ class ArrayField(ScalarField):
     def shape(self):
         return self._shape
 
+
 class StrField(ScalarField):
     """Abstract Representation of a Array type"""
-    shape = (1,)
+    shape = (1, )
 
     def __init__(self, name, dtype, shape, endian='BIG'):
         """Instantiate an array field"""
@@ -75,44 +76,55 @@ class StrField(ScalarField):
 CASTEP_BIN_FIELD_SPEC = {
     "CELL%NUM_IONS": (ScalarField("num_ions", int), ),
     "CELL%MAX_IONS_IN_SPECIES": (ScalarField("max_ions_in_species", int), ),
-    "CELL%REAL_LATTICE": (ArrayField("real_lattice", float, (3,3,)), ),
-    "CELL%RECIP_LATTICE": (ArrayField("recip_lattice", float, (3,3,)), ),
+    "CELL%REAL_LATTICE": (ArrayField("real_lattice", float, (
+        3,
+        3,
+    )), ),
+    "CELL%RECIP_LATTICE": (ArrayField("recip_lattice", float, (
+        3,
+        3,
+    )), ),
     "CELL%NUM_SPEICES": (ScalarField("num_species", int), ),
-    "CELL%NUM_IONS_IN_SPECIES": (ArrayField("num_ions_in_species", int, ("num_species", )), ),
-    "CELL%IONIC_POSITIONS": (ArrayField("ionic_positions", float, (3, "max_ions_in_species", "num_speices")),),
-    "CELL%SPECIES_SYMBOL": (ArrayField("species_symbol", 'a8', ("num_species", )),),
-    "FORCES": (ArrayField("forces", float, (3, "max_ions_in_species", "num_species")), ),
-    "FORCE_CON": (
-        ArrayField("phonon_supercell_matrix", int, (3,3)),
-        ArrayField("phonon_force_constant_matrix", float, (3, "num_ions", 3, "num_ions", "num_cells")),
-        ArrayField("phonon_supercell_origins", int, (3, "num_cells")),
-        ScalarField("phonon_force_constant_row", int)
-    ),
-    "BORN_CHGS":(ArrayField("born_charges", float, (3,3, "num_ions")), )
+    "CELL%NUM_IONS_IN_SPECIES": (ArrayField("num_ions_in_species", int,
+                                            ("num_species", )), ),
+    "CELL%IONIC_POSITIONS":
+    (ArrayField("ionic_positions", float,
+                (3, "max_ions_in_species", "num_speices")), ),
+    "CELL%SPECIES_SYMBOL": (ArrayField("species_symbol", 'a8',
+                                       ("num_species", )), ),
+    "FORCES": (ArrayField("forces", float,
+                          (3, "max_ions_in_species", "num_species")), ),
+    "FORCE_CON": (ArrayField("phonon_supercell_matrix", int, (3, 3)),
+                  ArrayField("phonon_force_constant_matrix", float,
+                             (3, "num_ions", 3, "num_ions", "num_cells")),
+                  ArrayField("phonon_supercell_origins", int,
+                             (3, "num_cells")),
+                  ScalarField("phonon_force_constant_row", int)),
+    "BORN_CHGS": (ArrayField("born_charges", float, (3, 3, "num_ions")), )
 }
 
 # Shape of each field
 CASTEP_BIN_FIELD_SHAPES = {
-    field.name: field.shape for tag in CASTEP_BIN_FIELD_SPEC 
-        for field in CASTEP_BIN_FIELD_SPEC[tag] 
-            if isinstance(field, ArrayField)
+    field.name: field.shape
+    for tag in CASTEP_BIN_FIELD_SPEC for field in CASTEP_BIN_FIELD_SPEC[tag]
+    if isinstance(field, ArrayField)
 }
 
 CASTEP_BIN_HEADERS = {
     "CELL%NUM_IONS": {
-        "num_ions": (">i4", (1,))
+        "num_ions": (">i4", (1, ))
     },
     "CELL%MAX_IONS_IN_SPECIES": {
-        "max_ions_in_species": (">i4", (1,))
+        "max_ions_in_species": (">i4", (1, ))
     },
     "CELL%REAL_LATTICE": {
-        "real_lattice": (">f8", (3,3))
+        "real_lattice": (">f8", (3, 3))
     },
     "CELL%RECIP_LATTICE": {
-        "recip_lattice": (">f8", (3,3))
+        "recip_lattice": (">f8", (3, 3))
     },
     "CELL%NUM_SPECIES": {
-        "num_species": (">i4", (1,))
+        "num_species": (">i4", (1, ))
     },
     "CELL%NUM_IONS_IN_SPECIES": {
         "num_ions_in_species": (">i4", ("num_species", ))
@@ -121,28 +133,33 @@ CASTEP_BIN_HEADERS = {
         "ionic_positions": (">f8", (3, "max_ions_in_species", "num_species"))
     },
     "CELL%SPECIES_SYMBOL": {
-        "species_symbol": (">a8", ("num_species",))
+        "species_symbol": (">a8", ("num_species", ))
     },
     "FORCES": {
         "forces": (">f8", (3, "max_ions_in_species", "num_species"))
     },
     "FORCE_CON": {
         "phonon_supercell_matrix": (">i4", (3, 3)),
-        "phonon_force_constant_matrix": (">f8", (3, "num_ions", 3, "num_ions", "num_cells")),
+        "phonon_force_constant_matrix":
+        (">f8", (3, "num_ions", 3, "num_ions", "num_cells")),
         "phonon_supercell_origins": (">i4", (3, "num_cells")),
-        "phonon_force_constant_row": (">i4", (1,)),
+        "phonon_force_constant_row": (">i4", (1, )),
     },
     "BORN_CHGS": {
         "born_charges": (">f8", (3, 3, "num_ions")),
     },
 }
 
-CASTEP_BIN_HEADERS_UNPACKED = {k: v for header in CASTEP_BIN_HEADERS for k, v in CASTEP_BIN_HEADERS[header].items()}
+CASTEP_BIN_HEADERS_UNPACKED = {
+    k: v
+    for header in CASTEP_BIN_HEADERS
+    for k, v in CASTEP_BIN_HEADERS[header].items()
+}
 
 
-def read_castep_bin(
-    filename: Union[str, Path], records_to_extract: Optional[Collection[str]] = None
-) -> Dict[str, Any]:
+def read_castep_bin(filename: Union[str, Path],
+                    records_to_extract: Optional[Collection[str]] = None
+                    ) -> Dict[str, Any]:
     """
     Read a castep_bin file for a given CASTEP run.
 
@@ -194,7 +211,8 @@ def read_castep_bin(
 
         if header not in header_offset_map:
             if records_to_extract and header in records_to_extract:
-                raise RuntimeError(f"Unable to find desired header {header} in file.")
+                raise RuntimeError(
+                    f"Unable to find desired header {header} in file.")
             continue
 
         with open(filename, "rb") as f:
@@ -204,15 +222,15 @@ def read_castep_bin(
                     CASTEP_BIN_FIELD_SPEC[header],
                     header_offset_map[header],
                     castep_data,
-                )
-            )
+                ))
 
     _reshape_arrays(castep_data)
 
     return castep_data
 
 
-def _reshape_arrays(castep_data: Dict[str, Any], _requires: Optional[dict] = None) -> None:
+def _reshape_arrays(castep_data: Dict[str, Any],
+                    _requires: Optional[dict] = None) -> None:
     """Recursively solve for unknown dimensions across arrays, reshaping
     them along the way.
 
@@ -231,35 +249,49 @@ def _reshape_arrays(castep_data: Dict[str, Any], _requires: Optional[dict] = Non
         _requires = {}
     resolved_unknowns = {}
     for field in castep_data:
-        if isinstance(castep_data[field], np.ndarray) and len(castep_data[field].shape) == 1:
-            shape = [castep_data.get(s) or s for s in CASTEP_BIN_HEADERS_UNPACKED[field][1]]
+        if isinstance(castep_data[field], np.ndarray) and len(
+                castep_data[field].shape) == 1:
+            shape = [
+                castep_data.get(s) or s
+                for s in CASTEP_BIN_HEADERS_UNPACKED[field][1]
+            ]
             _requires[field] = [s for s in shape if isinstance(s, str)]
 
             if len(set(_requires[field])) == 1:
                 # Attempt to resolve a single missing unknown.
                 # This unknown can appear in multiple dimensions of the same field.
                 unknown = _requires[field][0]
-                n = int(np.round(
-                    (castep_data[field].shape[0] // np.prod([s for s in shape if s != unknown]))
-                    ** 1./len(_requires[field]))
-                )
-                castep_data[field] = np.reshape(castep_data[field], [n if isinstance(v, str) else v for v in shape], order="F")
-                resolved_unknowns[unknown] = castep_data[field].shape[shape.index(unknown)]
+                n = int(
+                    np.round(
+                        (castep_data[field].shape[0] //
+                         np.prod([s for s in shape if s != unknown]))**1. /
+                        len(_requires[field])))
+                castep_data[field] = np.reshape(
+                    castep_data[field],
+                    [n if isinstance(v, str) else v for v in shape],
+                    order="F")
+                resolved_unknowns[unknown] = castep_data[field].shape[
+                    shape.index(unknown)]
                 _requires.pop(field)
 
             elif not _requires[field]:
                 # Shape should now be fully-specified
-                castep_data[field] = np.reshape(castep_data[field], shape, order="F")
+                castep_data[field] = np.reshape(castep_data[field],
+                                                shape,
+                                                order="F")
                 _requires.pop(field)
 
     castep_data.update(resolved_unknowns)
     for field in _requires:
         _requires[field] = [
-            s for s in [castep_data.get(s) or s for s in CASTEP_BIN_HEADERS_UNPACKED[field][1]]
-            if isinstance(s, str)
+            s for s in [
+                castep_data.get(s) or s
+                for s in CASTEP_BIN_HEADERS_UNPACKED[field][1]
+            ] if isinstance(s, str)
         ]
     # If all remaining fields have more than 1 unknown, give up
-    if _requires and all([len(set(_requires[field])) > 1 for field in _requires]):
+    if _requires and all(
+        [len(set(_requires[field])) > 1 for field in _requires]):
         raise RuntimeError(f"Too many unknowns to resolve: {_requires}")
 
     while _requires:
@@ -267,10 +299,10 @@ def _reshape_arrays(castep_data: Dict[str, Any], _requires: Optional[dict] = Non
 
 
 def _decode_records(
-    fp: io.BufferedReader,
-    record_specs: Tuple[FieldType],
-    offset: int,
-    castep_data: Dict[str, Any],
+        fp: io.BufferedReader,
+        record_specs: Tuple[FieldType],
+        offset: int,
+        castep_data: Dict[str, Any],
 ) -> Dict[str, Any]:
     """For a given file buffer, header name and byte offset, read
     the expected number of file records and decode them according to
@@ -305,24 +337,27 @@ def _decode_records(
         # Read the data record and marker and calculate the total number of array elements
         record_data, marker = _read_record(fp)
         count = marker // int(dtype[-1])
-        decoded_data[record_name] = np.frombuffer(
-            record_data, np.dtype(dtype), count=count
-        )
+        decoded_data[record_name] = np.frombuffer(record_data,
+                                                  np.dtype(dtype),
+                                                  count=count)
 
         # Convert to python string
         if isinstance(record_spec, StrField):
-            assert decoded_data[record_name].shape == (1,)
-            decoded_data[record_name] = decoded_data[record_name].tolist()[0].decode().strip()
+            assert decoded_data[record_name].shape == (1, )
+            decoded_data[record_name] = decoded_data[record_name].tolist(
+            )[0].decode().strip()
 
         # Convert 1D String arrays to a list of python strings
-        if isinstance(record_spec, ArrayField) and 'a' in dtype and len(shape) == 1:
+        if isinstance(record_spec,
+                      ArrayField) and 'a' in dtype and len(shape) == 1:
             assert decoded_data[record_name].ndim == 1
-            decoded_data[record_name] = [tmp.decode().strip() for tmp in decoded_data[record_name]]
-
+            decoded_data[record_name] = [
+                tmp.decode().strip() for tmp in decoded_data[record_name]
+            ]
 
         # Unpack single-valued data - but only for scalar field
-        if shape == (1,) and isinstance(record_spec, ScalarField):
-            assert decoded_data[record_name].shape == (1,)
+        if shape == (1, ) and isinstance(record_spec, ScalarField):
+            assert decoded_data[record_name].shape == (1, )
             decoded_data[record_name] = decoded_data[record_name].tolist()[0]
         # For decode strings
 
@@ -351,8 +386,7 @@ def _generate_header_offset_map(filename: Union[str, Path]) -> Dict[str, int]:
         header = header.decode("utf-8").strip("'")
         if header != "CASTEP_BIN":
             raise RuntimeError(
-                f"File {filename} does not start with 'CASTEP_BIN' header."
-            )
+                f"File {filename} does not start with 'CASTEP_BIN' header.")
 
         data = None
         while data != "END":
@@ -369,10 +403,10 @@ def _generate_header_offset_map(filename: Union[str, Path]) -> Dict[str, int]:
 
 
 def _read_record(
-    f: io.BufferedReader,
-    seek_only: bool = False,
-    record_marker_size: int = 4,
-    read_data_smaller_than=512,
+        f: io.BufferedReader,
+        seek_only: bool = False,
+        record_marker_size: int = 4,
+        read_data_smaller_than=512,
 ) -> Tuple[Optional[bytes], int]:
     """Reads the preceeding record marker for the next record in the
     file, decodes the record data, then reads the suffix record marker,
@@ -409,9 +443,8 @@ def _read_record(
     return data, marker
 
 
-def _read_marker(
-    f: Union[io.BufferedReader, bytes], record_marker_size: int = 4
-) -> int:
+def _read_marker(f: Union[io.BufferedReader, bytes],
+                 record_marker_size: int = 4) -> int:
     """Read the next *n* bytes from the buffer and try to interpret them
     as a Fortran record marker (typically uint4, but can depend on
     compiler).
