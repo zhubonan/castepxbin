@@ -158,14 +158,13 @@ class BoolField(ScalarField):
 
 class StructuredField:
     """A field that require case-by-case parsing"""
-
-
-class EigenValueAndOccCompositeField(StructuredField):
-    """Complex field for the eigenvalues and the occupations"""
     def __init__(self, endian='BIG'):
         self.endian = endian
         self.endian_sym = ">" if endian.lower() == "big" else "<"
 
+
+class EigenValueAndOccCompositeField(StructuredField):
+    """Complex field for the eigenvalues and the occupations"""
     def decode(self, fp, decoded_data, record_data=None):
         """Decode the occupation and eigenvalues field"""
         _ = record_data
@@ -192,6 +191,54 @@ class EigenValueAndOccCompositeField(StructuredField):
         # Kpoints consistent with the order of eigenvalues and occupancies - as distribution of the
         # kpoints may result in a different order compared to those specified in the CELL part
         decoded_data["kpoints_of_eigenvalues"] = kpoints
+
+
+class ChargeDensityField(StructuredField):
+    """For reading charge density"""
+    def decode(self, fp, decoded_data, record_data=None):
+        """
+        Decode the charge density
+        """
+
+        ngx_fine = decoded_data['ngx_fine']
+        ngy_fine = decoded_data['ngy_fine']
+        ngz_fine = decoded_data['ngz_fine']
+        nspin = decoded_data['nspins']
+
+        charge_density = np.zeros((ngx_fine, ngy_fine, ngz_fine),
+                                  dtype=complex)
+        zcol = np.zeros(ngz_fine, dtype=complex)
+        if nspin == 2:
+            spin_density = np.zeros((ngx_fine, ngy_fine, ngz_fine),
+                                    dtype=complex)
+            spin_col = np.zeros(ngz_fine, dtype=complex)
+
+            for ix in range(ngx_fine):
+                for iy in range(ngy_fine):
+                    data, _ = _read_record(fp)
+                    nx = np.frombuffer(data,
+                                       self.endian_sym + "i4",
+                                       offset=0,
+                                       count=1)[0]
+                    ny = np.frombuffer(data,
+                                       self.endian_sym + "i4",
+                                       offset=4,
+                                       count=1)[0]
+                    zcol = np.frombuffer(data,
+                                         self.endian_sym + "c16",
+                                         offset=8,
+                                         count=ngz_fine)
+                    spin_col = np.frombuffer(data,
+                                             self.endian_sym + "c16",
+                                             offset=8 + 16 * ngz_fine,
+                                             count=ngz_fine)
+                    charge_density[nx - 1, ny - 1, :] = zcol
+                    spin_density[nx - 1, ny - 1, :] = spin_col
+
+            decoded_data["spin_density"] = spin_density
+            decoded_data["charge_density"] = charge_density
+        if nspin == 1:
+            raise NotImplementedError
 
 
 # Defines the location of field relative to the tags
@@ -236,7 +283,14 @@ CASTEP_BIN_FIELD_SPEC = {
             [ScalarField("nbands", int),
              ScalarField("nspins", int)]),
         EigenValueAndOccCompositeField(),
-    )
+        BoolField("found_ground_state_density"),
+        CompositeField([
+            ScalarField("ngx_fine", int),
+            ScalarField("ngy_fine", int),
+            ScalarField("ngz_fine", int)
+        ]),
+        ChargeDensityField(),
+    ),
 }
 
 # Shape of each field
