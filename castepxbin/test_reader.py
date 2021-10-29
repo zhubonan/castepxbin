@@ -121,13 +121,15 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
                                                           3, data["num_ions"],
                                                           data["num_cells"])
 
-    # Check that process fails safely when not enough info is available
-    with pytest.raises(RuntimeError, match=r"Too many unknowns to resolve*"):
-        data = read_castep_bin(castep_bin_Si, records_to_extract=("FORCES"))
-
     # Check forces are consistent with castep file with multiple species
     data = read_castep_bin(castep_bin_SiO2)
     assert "forces" in data
+    assert data.get("found_ground_state_density") is True
+    assert data.get("found_ground_state_wavefunction") is True
+    assert data.get("total_energy") == pytest.approx(-77.0824329248417)
+    assert data.get("nbands") == 20
+    assert data.get("nspins") == 2
+
     ev_per_ang_to_hartree_per_bohr = 1e10 * scipy.constants.physical_constants[
         "Bohr radius"][0] / scipy.constants.physical_constants[
             "Hartree energy in eV"][0]

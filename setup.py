@@ -29,7 +29,7 @@ if __name__ == '__main__':
               'testing': ['pytest'],
               'pmg': ['pymatgen'],
               'pre-commit': [
-                  "pre-commit~=2.2", "pylint~=2.5; python_version>='3.0'",
+                  "pre-commit~=2.2", "pylint~=2.4.4; python_version>='3.0'",
                   "pylint-pytest"
               ]
           },

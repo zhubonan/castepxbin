@@ -14,7 +14,7 @@ the [Euphonic](https://github.com/pace-neutrons/Euphonic) package.
 
 # pylint: disable=invalid-name,too-few-public-methods
 
-from typing import Union, Dict, Any, Tuple, Collection, Optional
+from typing import Union, Dict, Any, Tuple, Collection, Optional, List
 from pathlib import Path
 from struct import unpack
 import io
@@ -32,18 +32,39 @@ TYPE_MAP = {
 
 class FieldType:
     """Abstract representation of the field type"""
+    def __init__(self, name, dtype, endian="BIG"):
+        self.name = name
+        ed = ">" if endian.lower() == "big" else "<"
+        dtype = TYPE_MAP.get(dtype, dtype)
+        self.type_string = f"{ed}{dtype}"
+
+    def decode(self, fp, decoded=None, record_data=None):
+        """
+        Decode the field with given file object or existing byte array
+        """
+        _ = decoded
+        if record_data is None:
+            record_data, marker = _read_record(fp)
+        else:
+            marker = len(record_data)
+        count = marker // int(self.type_string[-1])
+        return np.frombuffer(record_data,
+                             np.dtype(self.type_string),
+                             count=count)
+
+
+class CompositeField:
+    """Composition field - multiple entities are stored in a single record"""
+    def __init__(self, fields: List[FieldType]) -> None:
+        super().__init__()
+        self.fields = fields
 
 
 class ScalarField(FieldType):
     """Abstract Representation of sclar type"""
-    def __init__(self, name, dtype, endian='BIG'):
-        """Instantiate an scalar field"""
-
-        self.name = name
-        ed = ">" if endian.lower() == "big" else "<"
-        dtype = TYPE_MAP.get(dtype, dtype)
-
-        self.type_string = f"{ed}{dtype}"
+    def decode(self, fp, decoded=None, record_data=None):
+        array = super().decode(fp, decoded, record_data)
+        return array.tolist()[0]
 
     @property
     def shape(self):
@@ -61,15 +82,78 @@ class ArrayField(ScalarField):
     def shape(self):
         return self._shape
 
+    def resolve_shape(self, data):
+        """Resolve the shape of the array"""
+        shape = []
+        # Allow one dimension to be unresolved
+        nunspec = 0
+        missing = None
+        for val in self.shape:
+            if isinstance(val, str):
+                missing = val
+                val = data.get(val, -1)
+                if val == -1:
+                    nunspec += 1
+
+            shape.append(val)
+        if nunspec > 1:
+            raise RuntimeError(f"Cannot resolve the shape: {shape}")
+
+        return tuple(shape), missing
+
+    def decode(self, fp, decoded=None, record_data=None):
+        if record_data is None:
+            record_data, _ = _read_record(fp)
+        if decoded is None:
+            decoded = {}
+        shape, missing_dim = self.resolve_shape(decoded)
+        count = np.prod(shape)
+        # Fully specified
+        if count > 0:
+            array = np.frombuffer(record_data,
+                                  np.dtype(self.type_string),
+                                  count=count)
+        else:
+            # Not fully specified - in this case we read the full record
+            array = np.frombuffer(record_data,
+                                  np.dtype(self.type_string),
+                                  count=-1)
+            # Work out the missing dimension...
+            tot = array.size
+            left = -tot / np.prod(
+                [elem for elem in shape if isinstance(elem, int)])
+            decoded[missing_dim] = int(left)
+            # Reconstruct the shape array
+            actual_shape = []
+            for elem in shape:
+                if elem == -1:
+                    actual_shape.append(int(left))
+                else:
+                    actual_shape.append(elem)
+            shape = actual_shape
+
+        # Special case for 1D string array - return a list of strings
+        if 'a' in self.type_string and len(self.shape) == 1:
+            return [tmp.decode().strip() for tmp in array]
+        array = np.reshape(array, shape, order='F')
+        return array
+
 
 class StrField(ScalarField):
     """Abstract Representation of a Array type"""
-    shape = (1, )
+    def decode(self, fp, decoded=None, record_data=None):
+        bdata = super().decode(fp, decoded, record_data)
+        return bdata.decode().strip()
 
-    def __init__(self, name, dtype, shape, endian='BIG'):
-        """Instantiate an array field"""
-        super().__init__(name, dtype, endian)
-        self.shape = shape
+
+class BoolField(ScalarField):
+    """A bool field. Note that LOGIC type seems to be stored as INTEGER by Fortran"""
+    def __init__(self, name, endian='BIG'):
+        super().__init__(name, "i4", endian)
+
+    def decode(self, fp, decoded=None, record_data=None):
+        val = super().decode(fp, decoded, record_data)
+        return bool(val)
 
 
 # Defines the location of field relative to the tags
@@ -84,12 +168,12 @@ CASTEP_BIN_FIELD_SPEC = {
         3,
         3,
     )), ),
-    "CELL%NUM_SPEICES": (ScalarField("num_species", int), ),
+    "CELL%NUM_SPECIES": (ScalarField("num_species", int), ),
     "CELL%NUM_IONS_IN_SPECIES": (ArrayField("num_ions_in_species", int,
                                             ("num_species", )), ),
     "CELL%IONIC_POSITIONS":
     (ArrayField("ionic_positions", float,
-                (3, "max_ions_in_species", "num_speices")), ),
+                (3, "max_ions_in_species", "num_species")), ),
     "CELL%SPECIES_SYMBOL": (ArrayField("species_symbol", 'a8',
                                        ("num_species", )), ),
     "FORCES": (ArrayField("forces", float,
@@ -100,7 +184,17 @@ CASTEP_BIN_FIELD_SPEC = {
                   ArrayField("phonon_supercell_origins", int,
                              (3, "num_cells")),
                   ScalarField("phonon_force_constant_row", int)),
-    "BORN_CHGS": (ArrayField("born_charges", float, (3, 3, "num_ions")), )
+    "BORN_CHGS": (ArrayField("born_charges", float, (3, 3, "num_ions")), ),
+    # Parameters starts after the end of the global cell
+    "END_CELL_GLOBAL": (
+        BoolField("found_ground_state_wavefunction"
+                  ),  # Fortran logical saved as integer....
+        BoolField("found_ground_state_density"),
+        ScalarField("total_energy", float),
+        ScalarField("fermi_energy", float),
+        CompositeField(
+            [ScalarField("nbands", int),
+             ScalarField("nspins", int)]))
 }
 
 # Shape of each field
@@ -206,7 +300,8 @@ def read_castep_bin(filename: Union[str, Path],
 
     for header in CASTEP_BIN_FIELD_SPEC:
 
-        if records_to_extract and header not in records_to_extract:
+        if records_to_extract and header not in records_to_extract and not header.startswith(
+                "CELL%"):
             continue
 
         if header not in header_offset_map:
@@ -221,9 +316,10 @@ def read_castep_bin(filename: Union[str, Path],
                     f,
                     CASTEP_BIN_FIELD_SPEC[header],
                     header_offset_map[header],
+                    castep_data,
                 ))
 
-    _reshape_arrays(castep_data)
+    #_reshape_arrays(castep_data)
 
     return castep_data
 
@@ -299,6 +395,7 @@ def _decode_records(
         fp: io.BufferedReader,
         record_specs: Tuple[FieldType],
         offset: int,
+        decoded_data: dict = None,
 ) -> Dict[str, Any]:
     """For a given file buffer, header name and byte offset, read
     the expected number of file records and decode them according to
@@ -321,39 +418,25 @@ def _decode_records(
         that were resolved in this pass.
 
     """
-
-    decoded_data = {}
+    if decoded_data is None:
+        decoded_data = {}
     fp.seek(offset)
     for record_spec in record_specs:
-        record_name = record_spec.name
-        dtype, shape = record_spec.type_string, record_spec.shape
-
-        # Read the data record and marker and calculate the total number of array elements
-        record_data, marker = _read_record(fp)
-        count = marker // int(dtype[-1])
-        decoded_data[record_name] = np.frombuffer(record_data,
-                                                  np.dtype(dtype),
-                                                  count=count)
-
-        # Convert to python string
-        if isinstance(record_spec, StrField):
-            assert decoded_data[record_name].shape == (1, )
-            decoded_data[record_name] = decoded_data[record_name].tolist(
-            )[0].decode().strip()
-
-        # Convert 1D String arrays to a list of python strings
-        if isinstance(record_spec,
-                      ArrayField) and 'a' in dtype and len(shape) == 1:
-            assert decoded_data[record_name].ndim == 1
-            decoded_data[record_name] = [
-                tmp.decode().strip() for tmp in decoded_data[record_name]
-            ]
-
-        # Unpack single-valued data - but only for scalar field
-        if shape == (1, ) and isinstance(record_spec, ScalarField):
-            assert decoded_data[record_name].shape == (1, )
-            decoded_data[record_name] = decoded_data[record_name].tolist()[0]
-        # For decode strings
+        if isinstance(record_spec, FieldType):
+            record_name = record_spec.name
+            decoded_data[record_name] = record_spec.decode(fp, decoded_data)
+        # This is a composite field
+        elif isinstance(record_spec, CompositeField):
+            # Read the decoded data
+            record_data, _ = _read_record(fp)
+            for subspec in record_spec.fields:
+                offset = int(subspec.type_string[-1])
+                if isinstance(subspec, ArrayField):
+                    offset *= np.prod(subspec.resolve_shape(decoded_data)[0])
+                assert offset > 0
+                decoded_data[subspec.name] = subspec.decode(
+                    fp, decoded_data, record_data=record_data)
+                record_data = record_data[offset:]
 
     return decoded_data
 
