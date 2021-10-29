@@ -104,7 +104,6 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
     assert all(field in data for field in expected_fields)
     assert data["forces"].shape == (3, data["max_ions_in_species"],
                                     data["num_species"])
-
     # Check that indivdual blocks can resolve self-consistently
     # (the value of num_ions or num_cells are not read) from the castep_bin
     data = read_castep_bin(castep_bin_Si, records_to_extract=("FORCE_CON"))
@@ -129,6 +128,11 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
     assert data.get("total_energy") == pytest.approx(-77.0824329248417)
     assert data.get("nbands") == 20
     assert data.get("nspins") == 2
+    assert data.get("nkpts") == 14
+    assert data.get("kpoints").shape == (3, 14)
+    assert data.get("kpoints_of_eigenvalues").shape == (3, 14)
+    assert data.get("eigenvalues").shape == (20, 14, 2)
+    assert data.get("occupancies")[0, 0, 0] == 1.0
 
     ev_per_ang_to_hartree_per_bohr = 1e10 * scipy.constants.physical_constants[
         "Bohr radius"][0] / scipy.constants.physical_constants[

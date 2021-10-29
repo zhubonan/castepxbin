@@ -156,6 +156,44 @@ class BoolField(ScalarField):
         return bool(val)
 
 
+class StructuredField:
+    """A field that require case-by-case parsing"""
+
+
+class EigenValueAndOccCompositeField(StructuredField):
+    """Complex field for the eigenvalues and the occupations"""
+    def __init__(self, endian='BIG'):
+        self.endian = endian
+        self.endian_sym = ">" if endian.lower() == "big" else "<"
+
+    def decode(self, fp, decoded_data, record_data=None):
+        """Decode the occupation and eigenvalues field"""
+        _ = record_data
+        nbands = decoded_data['nbands']
+        nspin = decoded_data['nspins']
+        nkpts = decoded_data['nkpts']
+        kpoints = np.zeros((3, nkpts))
+        occ = np.zeros((nbands, nkpts, nspin))
+        eigenvalues = np.zeros((nbands, nkpts, nspin))
+
+        # Now start reading
+        for ik in range(nkpts):
+            data, _ = _read_record(fp)
+            kpoints[:, ik] = np.frombuffer(data, self.endian_sym + "f8")
+            for idx_spin in range(nspin):
+                data, _ = _read_record(fp)
+                occ[:, ik, idx_spin] = np.frombuffer(data,
+                                                     self.endian_sym + "f8")
+                data, _ = _read_record(fp)
+                eigenvalues[:, ik, idx_spin] = np.frombuffer(
+                    data, self.endian_sym + "f8")
+        decoded_data["occupancies"] = occ
+        decoded_data["eigenvalues"] = eigenvalues
+        # Kpoints consistent with the order of eigenvalues and occupancies - as distribution of the
+        # kpoints may result in a different order compared to those specified in the CELL part
+        decoded_data["kpoints_of_eigenvalues"] = kpoints
+
+
 # Defines the location of field relative to the tags
 CASTEP_BIN_FIELD_SPEC = {
     "CELL%NUM_IONS": (ScalarField("num_ions", int), ),
@@ -176,6 +214,8 @@ CASTEP_BIN_FIELD_SPEC = {
                 (3, "max_ions_in_species", "num_species")), ),
     "CELL%SPECIES_SYMBOL": (ArrayField("species_symbol", 'a8',
                                        ("num_species", )), ),
+    "NKPTS": (ScalarField("nkpts", int), ),
+    "KPOINTS": (ArrayField("kpoints", float, shape=(3, "nkpts")), ),
     "FORCES": (ArrayField("forces", float,
                           (3, "max_ions_in_species", "num_species")), ),
     "FORCE_CON": (ArrayField("phonon_supercell_matrix", int, (3, 3)),
@@ -194,7 +234,9 @@ CASTEP_BIN_FIELD_SPEC = {
         ScalarField("fermi_energy", float),
         CompositeField(
             [ScalarField("nbands", int),
-             ScalarField("nspins", int)]))
+             ScalarField("nspins", int)]),
+        EigenValueAndOccCompositeField(),
+    )
 }
 
 # Shape of each field
@@ -298,19 +340,19 @@ def read_castep_bin(filename: Union[str, Path],
 
     castep_data = {}
 
-    for header in CASTEP_BIN_FIELD_SPEC:
+    with open(filename, "rb") as f:
+        for header in CASTEP_BIN_FIELD_SPEC:
 
-        if records_to_extract and header not in records_to_extract and not header.startswith(
-                "CELL%"):
-            continue
+            if records_to_extract and header not in records_to_extract and not header.startswith(
+                    "CELL%"):
+                continue
 
-        if header not in header_offset_map:
-            if records_to_extract and header in records_to_extract:
-                raise RuntimeError(
-                    f"Unable to find desired header {header} in file.")
-            continue
+            if header not in header_offset_map:
+                if records_to_extract and header in records_to_extract:
+                    raise RuntimeError(
+                        f"Unable to find desired header {header} in file.")
+                continue
 
-        with open(filename, "rb") as f:
             castep_data.update(
                 _decode_records(
                     f,
@@ -319,76 +361,74 @@ def read_castep_bin(filename: Union[str, Path],
                     castep_data,
                 ))
 
-    #_reshape_arrays(castep_data)
-
     return castep_data
 
 
-def _reshape_arrays(castep_data: Dict[str, Any],
-                    _requires: Optional[dict] = None) -> None:
-    """Recursively solve for unknown dimensions across arrays, reshaping
-    them along the way.
+# def _reshape_arrays(castep_data: Dict[str, Any],
+#                     _requires: Optional[dict] = None) -> None:
+#     """Recursively solve for unknown dimensions across arrays, reshaping
+#     them along the way.
 
-    Procedure will fail if any iteration starts with every un-reshaped field
-    possessing multiple unknown dimensions.
+#     Procedure will fail if any iteration starts with every un-reshaped field
+#     possessing multiple unknown dimensions.
 
-    Unknown dimensions that are repeated (e.g., square matrix) will be solved.
+#     Unknown dimensions that are repeated (e.g., square matrix) will be solved.
 
-    Args:
-        castep_data: The dictionary of decoded but un-reshaped data, with keys
-            from `CASTEP_BIN_FIELD_SHAPES`.
-        _requires: Cache of remaining unknowns used for recursion.
+#     Args:
+#         castep_data: The dictionary of decoded but un-reshaped data, with keys
+#             from `CASTEP_BIN_FIELD_SHAPES`.
+#         _requires: Cache of remaining unknowns used for recursion.
 
-    """
-    if _requires is None:
-        _requires = {}
-    resolved_unknowns = {}
-    for field in castep_data:
-        if isinstance(castep_data[field], np.ndarray) and len(
-                castep_data[field].shape) == 1:
-            shape = [
-                castep_data.get(s) or s for s in CASTEP_BIN_FIELD_SHAPES[field]
-            ]
-            _requires[field] = [s for s in shape if isinstance(s, str)]
+#     """
+#     if _requires is None:
+#         _requires = {}
+#     resolved_unknowns = {}
+#     for field in castep_data:
+#         if isinstance(castep_data[field], np.ndarray) and len(
+#                 castep_data[field].shape) == 1:
+#             shape = [
+#                 castep_data.get(s) or s for s in CASTEP_BIN_FIELD_SHAPES[field]
+#             ]
+#             _requires[field] = [s for s in shape if isinstance(s, str)]
 
-            if len(set(_requires[field])) == 1:
-                # Attempt to resolve a single missing unknown.
-                # This unknown can appear in multiple dimensions of the same field.
-                unknown = _requires[field][0]
-                n = int(
-                    np.round(
-                        (castep_data[field].shape[0] //
-                         np.prod([s for s in shape if s != unknown]))**1. /
-                        len(_requires[field])))
-                castep_data[field] = np.reshape(
-                    castep_data[field],
-                    [n if isinstance(v, str) else v for v in shape],
-                    order="F")
-                resolved_unknowns[unknown] = castep_data[field].shape[
-                    shape.index(unknown)]
-                _requires.pop(field)
+#             if len(set(_requires[field])) == 1:
+#                 # Attempt to resolve a single missing unknown.
+#                 # This unknown can appear in multiple dimensions of the same field.
+#                 unknown = _requires[field][0]
+#                 n = int(
+#                     np.round(
+#                         (castep_data[field].shape[0] //
+#                          np.prod([s for s in shape if s != unknown]))**1. /
+#                         len(_requires[field])))
+#                 castep_data[field] = np.reshape(
+#                     castep_data[field],
+#                     [n if isinstance(v, str) else v for v in shape],
+#                     order="F")
+#                 resolved_unknowns[unknown] = castep_data[field].shape[
+#                     shape.index(unknown)]
+#                 _requires.pop(field)
 
-            elif not _requires[field]:
-                # Shape should now be fully-specified
-                castep_data[field] = np.reshape(castep_data[field],
-                                                shape,
-                                                order="F")
-                _requires.pop(field)
+#             elif not _requires[field]:
+#                 # Shape should now be fully-specified
+#                 castep_data[field] = np.reshape(castep_data[field],
+#                                                 shape,
+#                                                 order="F")
+#                 _requires.pop(field)
 
-    castep_data.update(resolved_unknowns)
-    for field in _requires:
-        _requires[field] = [
-            s for s in
-            [castep_data.get(s) or s for s in CASTEP_BIN_FIELD_SHAPES[field]]
-            if isinstance(s, str)
-        ]
-    # If all remaining fields have more than 1 unknown, give up
-    if _requires and all(
-            len(set(_requires[field])) > 1 for field in _requires):  # pylint: disable=bad-continuation
-        raise RuntimeError(f"Too many unknowns to resolve: {_requires}")
+#     castep_data.update(resolved_unknowns)
+#     for field in _requires:
+#         _requires[field] = [
+#             s for s in
+#             [castep_data.get(s) or s for s in CASTEP_BIN_FIELD_SHAPES[field]]
+#             if isinstance(s, str)
+#         ]
+#     # If all remaining fields have more than 1 unknown, give up
+#     if _requires and all(
+#             len(set(_requires[field])) > 1 for field in _requires):  # pylint: disable=bad-continuation
+#         raise RuntimeError(f"Too many unknowns to resolve: {_requires}")
 
-    while _requires:
-        _reshape_arrays(castep_data, _requires)
+#     while _requires:
+#         _reshape_arrays(castep_data, _requires)
 
 
 def _decode_records(
@@ -412,6 +452,7 @@ def _decode_records(
             These unknowns will be resolved where possible and returned
             in the final output dictionary.
         offset: The byte offset at which the records start in the buffer.
+        decoded_data: Data that has been decoded - need for getting array sizes.
 
     Returns:
         A dictionary containing the decoded data, and any named unknowns
@@ -437,6 +478,8 @@ def _decode_records(
                 decoded_data[subspec.name] = subspec.decode(
                     fp, decoded_data, record_data=record_data)
                 record_data = record_data[offset:]
+        elif isinstance(record_spec, StructuredField):
+            record_spec.decode(fp, decoded_data)
 
     return decoded_data
 
