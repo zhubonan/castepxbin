@@ -151,15 +151,10 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
 
     # Test reading all fields
     data = read_castep_bin(castep_bin_SiO2, records_to_extract=None)
-    expected_fields = (
-        "num_ions",
-        "real_lattice",
-        "recip_lattice",
-        "num_ions_in_species",
-        "ionic_positions",
-        "species_symbol",
-        "num_species",
-    )
+    expected_fields = ("num_ions", "real_lattice", "recip_lattice",
+                       "num_ions_in_species", "ionic_positions",
+                       "species_symbol", "num_species", "spin_density",
+                       "charge_density", "ngz_fine", "spin_treatment")
 
     for field in expected_fields:
         assert field in data

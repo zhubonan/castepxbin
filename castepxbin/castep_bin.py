@@ -114,6 +114,14 @@ class ArrayField(ScalarField):
         return tuple(shape), missing
 
     def decode(self, fp, decoded=None, record_data=None):
+        """
+        Decode the array from the record
+
+        Try to resolve single unresolved dimensions. The resolved size will be
+        stored in the decoded data. Search of the data can be either from a
+        the file object, or from an buffer that is already read. The latter
+        case is needed so composite record can be supported....
+        """
         if record_data is None:
             record_data, _ = _read_record(fp)
         if decoded is None:
@@ -217,13 +225,20 @@ class ChargeDensityField(StructuredField):
         ngz_fine = decoded_data['ngz_fine']
         nspin = decoded_data['nspins']
 
+        # Check if NCM
+        has_ncm = decoded_data['spin_treatment'] == "VECTOR"
+
         charge_density = np.zeros((ngx_fine, ngy_fine, ngz_fine),
                                   dtype=complex)
         zcol = np.zeros(ngz_fine, dtype=complex)
-        if nspin == 2:
+
+        if nspin == 2 and not has_ncm:
             spin_density = np.zeros((ngx_fine, ngy_fine, ngz_fine),
                                     dtype=complex)
-            spin_col = np.zeros(ngz_fine, dtype=complex)
+
+        if has_ncm:
+            spin_density = np.zeros((ngx_fine, ngy_fine, ngz_fine, 3),
+                                    dtype=complex)
 
         for _ in range(ngx_fine):
             for _ in range(ngy_fine):
@@ -242,14 +257,21 @@ class ChargeDensityField(StructuredField):
                                      count=ngz_fine)
                 charge_density[nx - 1, ny - 1, :] = zcol
                 # For NSPIN = 2
-                if nspin == 2:
+                if nspin == 2 and not has_ncm:
                     spin_col = np.frombuffer(data,
                                              self.endian_sym + "c16",
                                              offset=8 + 16 * ngz_fine,
                                              count=ngz_fine)
                     spin_density[nx - 1, ny - 1, :] = spin_col
+                if has_ncm:
+                    spin_col = np.frombuffer(data,
+                                             self.endian_sym + "c16",
+                                             offset=8 + 16 * ngz_fine,
+                                             count=ngz_fine * 3)
+                    spin_density[nx - 1, ny - 1, :, :] = spin_col.reshape(
+                        (ngz_fine, 3), order='C')
 
-        if nspin == 2:
+        if nspin == 2 or has_ncm:
             decoded_data["spin_density"] = spin_density
         decoded_data["charge_density"] = charge_density
 
