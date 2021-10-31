@@ -425,7 +425,8 @@ CASTEP_BIN_FIELD_SHAPES = {
 # }
 
 
-def read_castep_bin(filename: Union[str, Path],
+def read_castep_bin(filename: Union[str, Path] = None,
+                    fileobj=None,
                     records_to_extract: Optional[Collection[str]] = None
                     ) -> Dict[str, Any]:
     """
@@ -458,6 +459,7 @@ def read_castep_bin(filename: Union[str, Path],
 
     Args:
         filename: path of the file to be read
+        fileobj: An file-like object from which the data needs to be read
         records_to_extract: A collection of CASTEP bin headers. If `None`,
             extract all headers for which there is a defined shape specification
             in `CASTEP_BIN_HEADERS`.
@@ -468,30 +470,38 @@ def read_castep_bin(filename: Union[str, Path],
 
     """
 
-    header_offset_map = _generate_header_offset_map(filename)
+    if filename is not None:
+        f = open(filename, mode='rb')
+    else:
+        f = fileobj
+
+    header_offset_map = _generate_header_offset_map(f)
+    f.seek(0)
 
     castep_data = {}
 
-    with open(filename, "rb") as f:
-        for header in CASTEP_BIN_FIELD_SPEC:
+    for header in CASTEP_BIN_FIELD_SPEC:
 
-            if records_to_extract and header not in records_to_extract and not header.startswith(
-                    "CELL%"):
-                continue
+        if records_to_extract and header not in records_to_extract and not header.startswith(
+                "CELL%"):
+            continue
 
-            if header not in header_offset_map:
-                if records_to_extract and header in records_to_extract:
-                    raise RuntimeError(
-                        f"Unable to find desired header {header} in file.")
-                continue
+        if header not in header_offset_map:
+            if records_to_extract and header in records_to_extract:
+                raise RuntimeError(
+                    f"Unable to find desired header {header} in file.")
+            continue
 
-            castep_data.update(
-                _decode_records(
-                    f,
-                    CASTEP_BIN_FIELD_SPEC[header],
-                    header_offset_map[header],
-                    castep_data,
-                ))
+        castep_data.update(
+            _decode_records(
+                f,
+                CASTEP_BIN_FIELD_SPEC[header],
+                header_offset_map[header],
+                castep_data,
+            ))
+
+    if filename is not None:
+        f.close()
 
     return castep_data
 
@@ -619,7 +629,7 @@ def _decode_records(
     return decoded_data
 
 
-def _generate_header_offset_map(filename: Union[str, Path]) -> Dict[str, int]:
+def _generate_header_offset_map(fileobj) -> Dict[str, int]:
     """Scans a castep_bin file for recognisable headers, creating a
     dictionary of their byte-offsets within the file. The stored
     offset corresponds to the start of the record immediately
@@ -634,31 +644,32 @@ def _generate_header_offset_map(filename: Union[str, Path]) -> Dict[str, int]:
 
     """
     header_offset_map: Dict[str, int] = {}
-    with open(filename, "rb") as f:
 
-        # Check first header is "CASTEP_BIN"
-        header, _ = _read_record(f)
-        header = header.decode("utf-8").strip("'")
-        if header != "CASTEP_BIN":
-            raise RuntimeError(
-                f"File {filename} does not start with 'CASTEP_BIN' header.")
+    f = fileobj
 
-        data = None
-        while data != "END":
-            data, _ = _read_record(f, seek_only=True)
-            try:
-                data = data.decode("utf-8").strip("'").strip()
-                # Strip any non-alpha fields
-                if data and data[0].isalpha() and data.upper() == data:
-                    # Check if this header already exists
-                    # for example, the cell information is written twice, one for the original cell
-                    # and the other for the 'current' cell
-                    if data in header_offset_map:
-                        data = _find_header_suffix(data, header_offset_map)
+    # Check first header is "CASTEP_BIN"
+    header, _ = _read_record(f)
+    header = header.decode("utf-8").strip("'")
+    if header != "CASTEP_BIN":
+        raise RuntimeError(
+            f"File handler does not start with 'CASTEP_BIN' header.")
 
-                    header_offset_map[data] = f.tell()
-            except (AttributeError, UnicodeDecodeError):
-                pass
+    data = None
+    while data != "END":
+        data, _ = _read_record(f, seek_only=True)
+        try:
+            data = data.decode("utf-8").strip("'").strip()
+            # Strip any non-alpha fields
+            if data and data[0].isalpha() and data.upper() == data:
+                # Check if this header already exists
+                # for example, the cell information is written twice, one for the original cell
+                # and the other for the 'current' cell
+                if data in header_offset_map:
+                    data = _find_header_suffix(data, header_offset_map)
+
+                header_offset_map[data] = f.tell()
+        except (AttributeError, UnicodeDecodeError):
+            pass
 
     return header_offset_map
 
