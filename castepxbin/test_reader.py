@@ -150,7 +150,8 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
                                          data["forces"][:, :, 1].T[:2, :])
 
     # Test reading all fields
-    data = read_castep_bin(castep_bin_SiO2, records_to_extract=None)
+    fobj = open(castep_bin_SiO2, "rb")
+    data = read_castep_bin(fileobj=fobj, records_to_extract=None)
     expected_fields = ("num_ions", "real_lattice", "recip_lattice",
                        "num_ions_in_species", "ionic_positions",
                        "species_symbol", "num_species", "spin_density",
@@ -163,6 +164,7 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
                                              data['num_species'])
     assert data['species_symbol'] == ['O', 'Si']
     assert data['spin_treatment'] == 'SCALAR'
+    fobj.close()
 
 
 def test_ome_bin(ome_bin):
