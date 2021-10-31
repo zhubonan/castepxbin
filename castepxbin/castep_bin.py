@@ -13,6 +13,7 @@ the [Euphonic](https://github.com/pace-neutrons/Euphonic) package.
 """
 
 # pylint: disable=invalid-name,too-few-public-methods
+import re
 
 from typing import Union, Dict, Any, Tuple, Collection, Optional, List
 from pathlib import Path
@@ -47,7 +48,8 @@ class FieldType:
             record_data, marker = _read_record(fp)
         else:
             marker = len(record_data)
-        count = marker // int(self.type_string[-1])
+        count = marker // int(
+            re.match(r"[><][a-z?]+(\d+)", self.type_string).group(1))
         return np.frombuffer(record_data,
                              np.dtype(self.type_string),
                              count=count)
@@ -69,6 +71,16 @@ class ScalarField(FieldType):
     @property
     def shape(self):
         return (1, )
+
+
+class SkippedField(FieldType):
+    """A field that will be skipped"""
+    def __init__(self):
+        super().__init__("None", dtype='i4')
+
+    def decode(self, fp, decoded=None, record_data=None):
+        """Recode - read the field the advance the stream"""
+        _read_record(fp)
 
 
 class ArrayField(ScalarField):
@@ -199,7 +211,7 @@ class ChargeDensityField(StructuredField):
         """
         Decode the charge density
         """
-
+        _ = record_data
         ngx_fine = decoded_data['ngx_fine']
         ngy_fine = decoded_data['ngy_fine']
         ngz_fine = decoded_data['ngz_fine']
@@ -213,67 +225,102 @@ class ChargeDensityField(StructuredField):
                                     dtype=complex)
             spin_col = np.zeros(ngz_fine, dtype=complex)
 
-            for ix in range(ngx_fine):
-                for iy in range(ngy_fine):
-                    data, _ = _read_record(fp)
-                    nx = np.frombuffer(data,
-                                       self.endian_sym + "i4",
-                                       offset=0,
-                                       count=1)[0]
-                    ny = np.frombuffer(data,
-                                       self.endian_sym + "i4",
-                                       offset=4,
-                                       count=1)[0]
-                    zcol = np.frombuffer(data,
-                                         self.endian_sym + "c16",
-                                         offset=8,
-                                         count=ngz_fine)
+        for _ in range(ngx_fine):
+            for _ in range(ngy_fine):
+                data, _ = _read_record(fp)
+                nx = np.frombuffer(data,
+                                   self.endian_sym + "i4",
+                                   offset=0,
+                                   count=1)[0]
+                ny = np.frombuffer(data,
+                                   self.endian_sym + "i4",
+                                   offset=4,
+                                   count=1)[0]
+                zcol = np.frombuffer(data,
+                                     self.endian_sym + "c16",
+                                     offset=8,
+                                     count=ngz_fine)
+                charge_density[nx - 1, ny - 1, :] = zcol
+                # For NSPIN = 2
+                if nspin == 2:
                     spin_col = np.frombuffer(data,
                                              self.endian_sym + "c16",
                                              offset=8 + 16 * ngz_fine,
                                              count=ngz_fine)
-                    charge_density[nx - 1, ny - 1, :] = zcol
                     spin_density[nx - 1, ny - 1, :] = spin_col
 
+        if nspin == 2:
             decoded_data["spin_density"] = spin_density
-            decoded_data["charge_density"] = charge_density
-        if nspin == 1:
-            raise NotImplementedError
+        decoded_data["charge_density"] = charge_density
 
 
 # Defines the location of field relative to the tags
 CASTEP_BIN_FIELD_SPEC = {
-    "CELL%NUM_IONS": (ScalarField("num_ions", int), ),
-    "CELL%MAX_IONS_IN_SPECIES": (ScalarField("max_ions_in_species", int), ),
-    "CELL%REAL_LATTICE": (ArrayField("real_lattice", float, (
+    # Parameters
+    "BEGIN_ELECTRONIC": (
+        SkippedField(),
+        SkippedField(),
+        SkippedField(),
+        SkippedField(),  # nspin
+        SkippedField(),  #nbands - no need to read again
+        ScalarField("elec_temp", float),  #elect
+        SkippedField(),
+        SkippedField(),
+        SkippedField(),
+        StrField("electronic_minimizer", "a10"),
+        ScalarField("nelectrons", float),
+        ScalarField("nup", float),
+        ScalarField("ndown", float),
+        ScalarField("spin", float),
+        ScalarField("charge", float),
+        StrField("spin_treatment", "a20"),
+    ),
+
+    # The "original" cell
+    "CELL%NUM_IONS": (ScalarField("num_ions_orig", int), ),
+    "CELL%MAX_IONS_IN_SPECIES": (ScalarField("max_ions_in_species_orig",
+                                             int), ),
+    "CELL%REAL_LATTICE": (ArrayField("real_lattice_orig", float, (
         3,
         3,
     )), ),
-    "CELL%RECIP_LATTICE": (ArrayField("recip_lattice", float, (
+    "CELL%RECIP_LATTICE": (ArrayField("recip_lattice_orig", float, (
         3,
         3,
     )), ),
-    "CELL%NUM_SPECIES": (ScalarField("num_species", int), ),
-    "CELL%NUM_IONS_IN_SPECIES": (ArrayField("num_ions_in_species", int,
-                                            ("num_species", )), ),
+    "CELL%NUM_SPECIES": (ScalarField("num_species_orig", int), ),
+    "CELL%NUM_IONS_IN_SPECIES": (ArrayField("num_ions_in_species_orig", int,
+                                            ("num_species_orig", )), ),
     "CELL%IONIC_POSITIONS":
     (ArrayField("ionic_positions", float,
+                (3, "max_ions_in_species_orig", "num_species_orig")), ),
+    "CELL%SPECIES_SYMBOL": (ArrayField("species_symbol_orig", 'a8',
+                                       ("num_species_orig", )), ),
+
+    # The "current" cell
+    "CELL%NUM_IONS_01": (ScalarField("num_ions", int), ),
+    "CELL%MAX_IONS_IN_SPECIES_01": (ScalarField("max_ions_in_species", int), ),
+    "CELL%REAL_LATTICE_01": (ArrayField("real_lattice", float, (
+        3,
+        3,
+    )), ),
+    "CELL%RECIP_LATTICE_01": (ArrayField("recip_lattice", float, (
+        3,
+        3,
+    )), ),
+    "CELL%NUM_SPECIES_01": (ScalarField("num_species", int), ),
+    "CELL%NUM_IONS_IN_SPECIES_01": (ArrayField("num_ions_in_species", int,
+                                               ("num_species", )), ),
+    "CELL%IONIC_POSITIONS_01":
+    (ArrayField("ionic_positions", float,
                 (3, "max_ions_in_species", "num_species")), ),
-    "CELL%SPECIES_SYMBOL": (ArrayField("species_symbol", 'a8',
-                                       ("num_species", )), ),
-    "NKPTS": (ScalarField("nkpts", int), ),
-    "KPOINTS": (ArrayField("kpoints", float, shape=(3, "nkpts")), ),
-    "FORCES": (ArrayField("forces", float,
-                          (3, "max_ions_in_species", "num_species")), ),
-    "FORCE_CON": (ArrayField("phonon_supercell_matrix", int, (3, 3)),
-                  ArrayField("phonon_force_constant_matrix", float,
-                             (3, "num_ions", 3, "num_ions", "num_cells")),
-                  ArrayField("phonon_supercell_origins", int,
-                             (3, "num_cells")),
-                  ScalarField("phonon_force_constant_row", int)),
-    "BORN_CHGS": (ArrayField("born_charges", float, (3, 3, "num_ions")), ),
-    # Parameters starts after the end of the global cell
-    "END_CELL_GLOBAL": (
+    "CELL%SPECIES_SYMBOL_01": (ArrayField("species_symbol", 'a8',
+                                          ("num_species", )), ),
+    "NKPTS_01": (ScalarField("nkpts", int), ),
+    "KPOINTS_01": (ArrayField("kpoints", float, shape=(3, "nkpts")), ),
+
+    # Parameters starts after the end of the global section of the "current" cell
+    "END_CELL_GLOBAL_01": (
         BoolField("found_ground_state_wavefunction"
                   ),  # Fortran logical saved as integer....
         BoolField("found_ground_state_density"),
@@ -291,6 +338,15 @@ CASTEP_BIN_FIELD_SPEC = {
         ]),
         ChargeDensityField(),
     ),
+    "FORCES": (ArrayField("forces", float,
+                          (3, "max_ions_in_species", "num_species")), ),
+    "FORCE_CON": (ArrayField("phonon_supercell_matrix", int, (3, 3)),
+                  ArrayField("phonon_force_constant_matrix", float,
+                             (3, "num_ions", 3, "num_ions", "num_cells")),
+                  ArrayField("phonon_supercell_origins", int,
+                             (3, "num_cells")),
+                  ScalarField("phonon_force_constant_row", int)),
+    "BORN_CHGS": (ArrayField("born_charges", float, (3, 3, "num_ions")), ),
 }
 
 # Shape of each field
@@ -518,6 +574,9 @@ def _decode_records(
     fp.seek(offset)
     for record_spec in record_specs:
         if isinstance(record_spec, FieldType):
+            if isinstance(record_spec, SkippedField):
+                record_spec.decode(fp)
+                continue
             record_name = record_spec.name
             decoded_data[record_name] = record_spec.decode(fp, decoded_data)
         # This is a composite field
@@ -569,11 +628,29 @@ def _generate_header_offset_map(filename: Union[str, Path]) -> Dict[str, int]:
                 data = data.decode("utf-8").strip("'").strip()
                 # Strip any non-alpha fields
                 if data and data[0].isalpha() and data.upper() == data:
+                    # Check if this header already exists
+                    # for example, the cell information is written twice, one for the original cell
+                    # and the other for the 'current' cell
+                    if data in header_offset_map:
+                        data = _find_header_suffix(data, header_offset_map)
+
                     header_offset_map[data] = f.tell()
             except (AttributeError, UnicodeDecodeError):
                 pass
 
     return header_offset_map
+
+
+def _find_header_suffix(name, header_offset_map):
+    """Found a suitable suffix the a given header name with number suffix"""
+    counter = 1
+    for key in header_offset_map.keys():
+        match = re.match(f"{name}_(\\d+)", key)
+        if match:
+            num = int(match.group(1))
+            if num >= counter:
+                counter = num + 1
+    return f'{name}_{counter:02d}'
 
 
 def _read_record(

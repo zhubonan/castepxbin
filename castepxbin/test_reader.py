@@ -94,7 +94,7 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
     # Check that the same parsing works even if cell info is missing (e.g., test recursive dimension solving)
     data = read_castep_bin(castep_bin_Si,
                            records_to_extract=("FORCES",
-                                               "CELL%MAX_IONS_IN_SPECIES"))
+                                               "CELL%MAX_IONS_IN_SPECIES_01"))
 
     expected_fields = (
         "num_species",
@@ -167,6 +167,7 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
     assert data['ionic_positions'].shape == (3, data['max_ions_in_species'],
                                              data['num_species'])
     assert data['species_symbol'] == ['O', 'Si']
+    assert data['spin_treatment'] == 'SCALAR'
 
 
 def test_ome_bin(ome_bin):
