@@ -78,7 +78,7 @@ Once exception is the optical matrix element readers, where output array are con
 
 ### Extending the `castep_bin` reader
 
-At the moment, not all sections of the `castep_bin` is read (as there are too many!), but more contents can be added easity by including more keys the `castepxbin.castep_bin.CASTEP_BIN_FIELD_SPEC` dictionary, such an modified version can be passed to the `read_castep_bin` function.
+At the moment, not all sections of the `castep_bin` is read (as there are too many!), but more contents can be added easily by including more keys the `castepxbin.castep_bin.CASTEP_BIN_FIELD_SPEC` dictionary, such an modified version can be passed to the `read_castep_bin` function.
 
 For example, suppose some additional field is written as:
 
@@ -104,9 +104,8 @@ my_spec['MY_SECTION'] = (
 ```
 
 The `nspecies` is unknown for now, but it can be read from other sections prior to processing the  'MY_SECTION' field.
-This also means that the order of fields in `CASTEP_BIN_FIELD_SPEC` is important.
+This also means that the order of fields in `CASTEP_BIN_FIELD_SPEC` can be important.
 Not that for this special case, the `nspecies` can actually be resolve by inspecting the length of the record.
-In fact, the value from `nspecies` can be inferred by reading the `my_array` field.
 This will not be possible if there are two dimensions whose sizes are unknown.
 
 ## Acknowledgement
