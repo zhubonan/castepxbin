@@ -167,13 +167,19 @@ class StrField(ScalarField):
 
 
 class BoolField(ScalarField):
-    """A bool field. Note that LOGIC type seems to be stored as INTEGER by Fortran"""
+    """
+    A boolean field
+
+    Note that LOGICAL type is typically represented as INTEGER by Fortran.
+    Different compilers may have different conventions, but 0 can be consistently
+    identified as .FALSE.
+    """
     def __init__(self, name, endian='BIG'):
         super().__init__(name, "i4", endian)
 
     def decode(self, fp, decoded=None, record_data=None):
         val = super().decode(fp, decoded, record_data)
-        return bool(val)
+        return bool(val)  # Anything !=0 is True
 
 
 class StructuredField:
