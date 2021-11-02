@@ -345,7 +345,12 @@ CASTEP_BIN_FIELD_SPEC = {
     "CELL%SPECIES_SYMBOL_01": (ArrayField("species_symbol", 'a8',
                                           ("num_species", )), ),
     "NKPTS_01": (ScalarField("nkpts", int), ),
-    "KPOINTS_01": (ArrayField("kpoints", float, shape=(3, "nkpts")), ),
+    "KPOINTS_01":
+    (ArrayField("kpoints", float,
+                shape=(3, "nkpts")), ),  # Kpoints in the original order
+    "KPOINT_WEIGHTS_01":
+    (ArrayField("kpoint_weights", float,
+                shape=("nkpts", )), ),  # Weights in the original order
 
     # Parameters starts after the end of the global section of the "current" cell
     "END_CELL_GLOBAL_01": (
@@ -357,7 +362,8 @@ CASTEP_BIN_FIELD_SPEC = {
         CompositeField(
             [ScalarField("nbands", int),
              ScalarField("nspins", int)]),
-        EigenValueAndOccCompositeField(),
+        EigenValueAndOccCompositeField(
+        ),  # Read the eigenvalues note that the arrays are reshaped
         BoolField("found_ground_state_density"),
         CompositeField([
             ScalarField("ngx_fine", int),
@@ -366,6 +372,7 @@ CASTEP_BIN_FIELD_SPEC = {
         ]),
         ChargeDensityField(),
     ),
+    "E_FERMI": (ScalarField("fermi_energy_second_spin", float), ),
     "FORCES": (ArrayField("forces", float,
                           (3, "max_ions_in_species", "num_species")), ),
     "FORCE_CON": (ArrayField("phonon_supercell_matrix", int, (3, 3)),
