@@ -375,6 +375,8 @@ CASTEP_BIN_FIELD_SPEC = {
     "E_FERMI": (ScalarField("fermi_energy_second_spin", float), ),
     "FORCES": (ArrayField("forces", float,
                           (3, "max_ions_in_species", "num_species")), ),
+    "STRESS": (ArrayField("stress", float,
+                          (6,)), ),
     "FORCE_CON": (ArrayField("phonon_supercell_matrix", int, (3, 3)),
                   ArrayField("phonon_force_constant_matrix", float,
                              (3, "num_ions", 3, "num_ions", "num_cells")),
