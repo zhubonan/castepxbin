@@ -2,7 +2,11 @@
 Functions for handling wave function related data
 """
 
+from typing import BinaryIO
+
 import numpy as np
+
+from .castep_bin import read_castep_bin
 
 
 def coords_to_indices(grid_coords: np.ndarray, grid_size: np.ndarray):
@@ -62,7 +66,7 @@ def coeff_to_recip(
     return grid
 
 
-class WaveFunction:
+class WaveFunction:  # pylint:disable=too-many-instance-attributes
     """
     Class for handling the wave function
     """
@@ -78,6 +82,8 @@ class WaveFunction:
         real_lattice,
         eigenvalues,
         occupancies,
+        fermi_energy,
+        data=None,
     ):
         """Instantiate weave function reader"""
 
@@ -89,6 +95,10 @@ class WaveFunction:
             self.nkpts,
             self.nspins,
         ) = coeffs.shape
+        if data is None:
+            data = {}
+        self.data = data
+        self.fermi_energy = fermi_energy
         self.nwaves_at_kp = nwaves_at_kp
         self.pw_grid_coords = pw_grid_coords
         self.mesh_size = mesh_size
@@ -99,6 +109,10 @@ class WaveFunction:
         self.real_lattice = real_lattice
         self.occupancies = occupancies
         self.eigenvalues = eigenvalues
+        # Orbital files from bandstructure/spectral calculations do no contain occupancies
+        # Here we naively occupy all states below the fermi level...
+        if self.occupancies.sum() == 0:
+            self.occupancies[self.eigenvalues < self.fermi_energy] = 1.0
 
     @classmethod
     def from_dict(cls, full_data):
@@ -112,10 +126,30 @@ class WaveFunction:
         for key in ["coeffs", "pw_grid_coords", "nwaves_at_kp", "kpts"]:
             inputd[key] = wfc[key]
 
-        for key in ["real_lattice", "recip_lattice", "eigenvalues", "occupancies"]:
+        for key in [
+            "real_lattice",
+            "recip_lattice",
+            "eigenvalues",
+            "occupancies",
+            "fermi_energy",
+        ]:
             inputd[key] = full_data[key]
+        inputd["data"] = full_data
 
         return cls(**inputd)
+
+    @classmethod
+    def from_file(cls, fname: BinaryIO):
+        """
+        Load directly from a file or a file object
+
+        :param fname: Name of the file or a file-like object.
+        """
+        if hasattr(fname, "read"):
+            data = read_castep_bin(fileobj=fname)
+        else:
+            data = read_castep_bin(filename=fname)
+        return cls.from_dict(data)
 
     def get_reciprocal_grid(self) -> np.ndarray:
         """
