@@ -9,20 +9,19 @@ precision of the CASTEP run itself.
 
 This implementation takes inspiration from similar functions in the
 the [Euphonic](https://github.com/pace-neutrons/Euphonic) package.
-
 """
+
+import io
 
 # pylint: disable=invalid-name,too-few-public-methods
 import re
-
-from typing import Union, Dict, Any, Tuple, Collection, Optional, List
 from pathlib import Path
 from struct import unpack
-import io
+from typing import Any, Collection, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-__all__ = ("read_castep_bin", )
+__all__ = ("read_castep_bin",)
 
 TYPE_MAP = {
     int: "i4",
@@ -33,6 +32,7 @@ TYPE_MAP = {
 
 class FieldType:
     """Abstract representation of the field type"""
+
     def __init__(self, name, dtype, endian="BIG"):
         self.name = name
         ed = ">" if endian.lower() == "big" else "<"
@@ -48,15 +48,13 @@ class FieldType:
             record_data, marker = _read_record(fp)
         else:
             marker = len(record_data)
-        count = marker // int(
-            re.match(r"[><][a-z?]+(\d+)", self.type_string).group(1))
-        return np.frombuffer(record_data,
-                             np.dtype(self.type_string),
-                             count=count)
+        count = marker // int(re.match(r"[><][a-z?]+(\d+)", self.type_string).group(1))
+        return np.frombuffer(record_data, np.dtype(self.type_string), count=count)
 
 
 class CompositeField:
     """Composition field - multiple entities are stored in a single record"""
+
     def __init__(self, fields: List[FieldType]) -> None:
         super().__init__()
         self.fields = fields
@@ -64,19 +62,21 @@ class CompositeField:
 
 class ScalarField(FieldType):
     """Abstract Representation of sclar type"""
+
     def decode(self, fp, decoded=None, record_data=None):
         array = super().decode(fp, decoded, record_data)
         return array.tolist()[0]
 
     @property
     def shape(self):
-        return (1, )
+        return (1,)
 
 
 class SkippedField(FieldType):
     """A field that will be skipped"""
+
     def __init__(self):
-        super().__init__("None", dtype='i4')
+        super().__init__("None", dtype="i4")
 
     def decode(self, fp, decoded=None, record_data=None):
         """Recode - read the field the advance the stream"""
@@ -85,7 +85,8 @@ class SkippedField(FieldType):
 
 class ArrayField(ScalarField):
     """Abstract Representation of a Array type"""
-    def __init__(self, name, dtype, shape, endian='BIG'):
+
+    def __init__(self, name, dtype, shape, endian="BIG"):
         """Instantiate an array field"""
         super().__init__(name, dtype, endian)
         self._shape = shape
@@ -130,18 +131,13 @@ class ArrayField(ScalarField):
         count = np.prod(shape)
         # Fully specified
         if count > 0:
-            array = np.frombuffer(record_data,
-                                  np.dtype(self.type_string),
-                                  count=count)
+            array = np.frombuffer(record_data, np.dtype(self.type_string), count=count)
         else:
             # Not fully specified - in this case we read the full record
-            array = np.frombuffer(record_data,
-                                  np.dtype(self.type_string),
-                                  count=-1)
+            array = np.frombuffer(record_data, np.dtype(self.type_string), count=-1)
             # Work out the missing dimension...
             tot = array.size
-            left = -tot / np.prod(
-                [elem for elem in shape if isinstance(elem, int)])
+            left = -tot / np.prod([elem for elem in shape if isinstance(elem, int)])
             decoded[missing_dim] = int(left)
             # Reconstruct the shape array
             actual_shape = []
@@ -153,14 +149,15 @@ class ArrayField(ScalarField):
             shape = actual_shape
 
         # Special case for 1D string array - return a list of strings
-        if 'a' in self.type_string and len(self.shape) == 1:
+        if "a" in self.type_string and len(self.shape) == 1:
             return [tmp.decode().strip() for tmp in array]
-        array = np.reshape(array, shape, order='F')
+        array = np.reshape(array, shape, order="F")
         return array
 
 
 class StrField(ScalarField):
     """Abstract Representation of a Array type"""
+
     def decode(self, fp, decoded=None, record_data=None):
         bdata = super().decode(fp, decoded, record_data)
         return bdata.decode().strip()
@@ -174,7 +171,8 @@ class BoolField(ScalarField):
     Different compilers may have different conventions, but 0 can be consistently
     identified as .FALSE.
     """
-    def __init__(self, name, endian='BIG'):
+
+    def __init__(self, name, endian="BIG"):
         super().__init__(name, "i4", endian)
 
     def decode(self, fp, decoded=None, record_data=None):
@@ -184,19 +182,21 @@ class BoolField(ScalarField):
 
 class StructuredField:
     """A field that require case-by-case parsing"""
-    def __init__(self, endian='BIG'):
+
+    def __init__(self, endian="BIG"):
         self.endian = endian
         self.endian_sym = ">" if endian.lower() == "big" else "<"
 
 
 class EigenValueAndOccCompositeField(StructuredField):
     """Complex field for the eigenvalues and the occupations"""
+
     def decode(self, fp, decoded_data, record_data=None):
         """Decode the occupation and eigenvalues field"""
         _ = record_data
-        nbands = decoded_data['nbands']
-        nspin = decoded_data['nspins']
-        nkpts = decoded_data['nkpts']
+        nbands = decoded_data["nbands"]
+        nspin = decoded_data["nspins"]
+        nkpts = decoded_data["nkpts"]
         kpoints = np.zeros((3, nkpts))
         occ = np.zeros((nbands, nkpts, nspin))
         eigenvalues = np.zeros((nbands, nkpts, nspin))
@@ -207,11 +207,11 @@ class EigenValueAndOccCompositeField(StructuredField):
             kpoints[:, ik] = np.frombuffer(data, self.endian_sym + "f8")
             for idx_spin in range(nspin):
                 data, _ = _read_record(fp)
-                occ[:, ik, idx_spin] = np.frombuffer(data,
-                                                     self.endian_sym + "f8")
+                occ[:, ik, idx_spin] = np.frombuffer(data, self.endian_sym + "f8")
                 data, _ = _read_record(fp)
                 eigenvalues[:, ik, idx_spin] = np.frombuffer(
-                    data, self.endian_sym + "f8")
+                    data, self.endian_sym + "f8"
+                )
         decoded_data["occupancies"] = occ
         decoded_data["eigenvalues"] = eigenvalues
         # Kpoints consistent with the order of eigenvalues and occupancies - as distribution of the
@@ -221,65 +221,133 @@ class EigenValueAndOccCompositeField(StructuredField):
 
 class ChargeDensityField(StructuredField):
     """For reading charge density"""
+
     def decode(self, fp, decoded_data, record_data=None):
         """
         Decode the charge density
         """
         _ = record_data
-        ngx_fine = decoded_data['ngx_fine']
-        ngy_fine = decoded_data['ngy_fine']
-        ngz_fine = decoded_data['ngz_fine']
-        nspin = decoded_data['nspins']
+        ngx_fine = decoded_data["ngx_fine"]
+        ngy_fine = decoded_data["ngy_fine"]
+        ngz_fine = decoded_data["ngz_fine"]
+        nspin = decoded_data["nspins"]
 
         # Check if NCM
-        has_ncm = decoded_data['spin_treatment'] == "VECTOR"
+        has_ncm = decoded_data["spin_treatment"] == "VECTOR"
 
-        charge_density = np.zeros((ngx_fine, ngy_fine, ngz_fine),
-                                  dtype=complex)
+        charge_density = np.zeros((ngx_fine, ngy_fine, ngz_fine), dtype=complex)
         zcol = np.zeros(ngz_fine, dtype=complex)
 
         if nspin == 2 and not has_ncm:
-            spin_density = np.zeros((ngx_fine, ngy_fine, ngz_fine),
-                                    dtype=complex)
+            spin_density = np.zeros((ngx_fine, ngy_fine, ngz_fine), dtype=complex)
 
         if has_ncm:
-            spin_density = np.zeros((ngx_fine, ngy_fine, ngz_fine, 3),
-                                    dtype=complex)
+            spin_density = np.zeros((ngx_fine, ngy_fine, ngz_fine, 3), dtype=complex)
 
         for _ in range(ngx_fine):
             for _ in range(ngy_fine):
                 data, _ = _read_record(fp)
-                nx = np.frombuffer(data,
-                                   self.endian_sym + "i4",
-                                   offset=0,
-                                   count=1)[0]
-                ny = np.frombuffer(data,
-                                   self.endian_sym + "i4",
-                                   offset=4,
-                                   count=1)[0]
-                zcol = np.frombuffer(data,
-                                     self.endian_sym + "c16",
-                                     offset=8,
-                                     count=ngz_fine)
+                nx = np.frombuffer(data, self.endian_sym + "i4", offset=0, count=1)[0]
+                ny = np.frombuffer(data, self.endian_sym + "i4", offset=4, count=1)[0]
+                zcol = np.frombuffer(
+                    data, self.endian_sym + "c16", offset=8, count=ngz_fine
+                )
                 charge_density[nx - 1, ny - 1, :] = zcol
                 # For NSPIN = 2
                 if nspin == 2 and not has_ncm:
-                    spin_col = np.frombuffer(data,
-                                             self.endian_sym + "c16",
-                                             offset=8 + 16 * ngz_fine,
-                                             count=ngz_fine)
+                    spin_col = np.frombuffer(
+                        data,
+                        self.endian_sym + "c16",
+                        offset=8 + 16 * ngz_fine,
+                        count=ngz_fine,
+                    )
                     spin_density[nx - 1, ny - 1, :] = spin_col
                 if has_ncm:
-                    spin_col = np.frombuffer(data,
-                                             self.endian_sym + "c16",
-                                             offset=8 + 16 * ngz_fine,
-                                             count=ngz_fine * 3)
+                    spin_col = np.frombuffer(
+                        data,
+                        self.endian_sym + "c16",
+                        offset=8 + 16 * ngz_fine,
+                        count=ngz_fine * 3,
+                    )
                     spin_density[nx - 1, ny - 1, :, :] = spin_col.reshape(
-                        (ngz_fine, 3), order='C')
+                        (ngz_fine, 3), order="C"
+                    )
 
         if nspin == 2 or has_ncm:
             decoded_data["spin_density"] = spin_density
         decoded_data["charge_density"] = charge_density
+
+
+class WaveFunctionField(StructuredField):
+    """For reading the wave function"""
+
+    @staticmethod
+    def decode(fp, decoded_data, record_data=None):
+        """
+        Decode the charge density
+        """
+        _ = record_data
+        ngx = decoded_data["ngx"]
+        ngy = decoded_data["ngy"]
+        ngz = decoded_data["ngz"]
+        spinorcomps = decoded_data["wave_spinorcomps"]
+        nbands_max = decoded_data["wave_nbands_max"]
+        nkpts = decoded_data["wave_nkpts"]
+        nspins = decoded_data["wave_nspins"]
+        coeff_size_1 = decoded_data["wave_coeff_size_1"]
+
+        # Main storage space for the coefficients
+        coeffs = np.zeros(
+            (coeff_size_1, spinorcomps, nbands_max, nkpts, nspins),
+            order="F",
+            dtype=complex,
+        )
+        nwaves_at_kp = np.zeros(nkpts, dtype=int)
+        kpts = np.zeros((3, nkpts), dtype=float, order="F")
+        pw_grid_coord = np.zeros((3, coeff_size_1, nkpts), dtype=int, order="F")
+
+        record_spec1 = CompositeField(
+            [ArrayField("kpt", dtype=float, shape=(3,)), ScalarField("nwaves", int)]
+        )
+
+        for ispin in range(nspins):
+            for ik in range(nkpts):
+                (  # pylint: disable=unbalanced-tuple-unpacking
+                    kpts[:, ik],
+                    nwaves,
+                ) = _decode_composite(fp, record_spec1)
+                nwaves_at_kp[ik] = nwaves
+                wavecoords_spec = ArrayField("grid", int, (nwaves,))
+                coeff_spec = ArrayField("coeff", complex, (nwaves,))
+                # Read the coordinates of the plane waves with the unit of the reciprocal lattice vectors
+                coords_x = wavecoords_spec.decode(fp)
+                coords_y = wavecoords_spec.decode(fp)
+                coords_z = wavecoords_spec.decode(fp)
+                pw_grid_coord[0, :nwaves, ik] = coords_x
+                pw_grid_coord[1, :nwaves, ik] = coords_y
+                pw_grid_coord[2, :nwaves, ik] = coords_z
+                for iband in range(nbands_max):
+                    for ispinor in range(spinorcomps):
+                        this_coeff = coeff_spec.decode(fp)
+                        coeffs[:nwaves, ispinor, iband, ik, ispin] = this_coeff
+
+        # Collect the data
+        data = {
+            "ngx": ngx,
+            "ngy": ngy,
+            "ngz": ngz,
+            "pw_grid_coord": pw_grid_coord,
+            "coeffs": coeffs,
+            "kpts": kpts,
+            "nwaves_at_kp": nwaves_at_kp,
+            **{
+                key.replace("wave_", ""): value
+                for key, value in decoded_data.items()
+                if key.startswith("wave_")
+            },
+        }
+        # Save the data under the key 'wavefunction'
+        decoded_data["wavefunction"] = data
 
 
 # Defines the location of field relative to the tags
@@ -290,8 +358,8 @@ CASTEP_BIN_FIELD_SPEC = {
         SkippedField(),
         SkippedField(),
         SkippedField(),  # nspin
-        SkippedField(),  #nbands - no need to read again
-        ScalarField("elec_temp", float),  #elect
+        SkippedField(),  # nbands - no need to read again
+        ScalarField("elec_temp", float),  # elect
         SkippedField(),
         SkippedField(),
         SkippedField(),
@@ -303,145 +371,175 @@ CASTEP_BIN_FIELD_SPEC = {
         ScalarField("charge", float),
         StrField("spin_treatment", "a20"),
     ),
-
     # The "original" cell
-    "CELL%NUM_IONS": (ScalarField("num_ions_orig", int), ),
-    "CELL%MAX_IONS_IN_SPECIES": (ScalarField("max_ions_in_species_orig",
-                                             int), ),
-    "CELL%REAL_LATTICE": (ArrayField("real_lattice_orig", float, (
-        3,
-        3,
-    )), ),
-    "CELL%RECIP_LATTICE": (ArrayField("recip_lattice_orig", float, (
-        3,
-        3,
-    )), ),
-    "CELL%NUM_SPECIES": (ScalarField("num_species_orig", int), ),
-    "CELL%NUM_IONS_IN_SPECIES": (ArrayField("num_ions_in_species_orig", int,
-                                            ("num_species_orig", )), ),
-    "CELL%IONIC_POSITIONS":
-    (ArrayField("ionic_positions", float,
-                (3, "max_ions_in_species_orig", "num_species_orig")), ),
-    "CELL%SPECIES_SYMBOL": (ArrayField("species_symbol_orig", 'a8',
-                                       ("num_species_orig", )), ),
-
+    "CELL%NUM_IONS": (ScalarField("num_ions_orig", int),),
+    "CELL%MAX_IONS_IN_SPECIES": (ScalarField("max_ions_in_species_orig", int),),
+    "CELL%REAL_LATTICE": (
+        ArrayField(
+            "real_lattice_orig",
+            float,
+            (
+                3,
+                3,
+            ),
+        ),
+    ),
+    "CELL%RECIP_LATTICE": (
+        ArrayField(
+            "recip_lattice_orig",
+            float,
+            (
+                3,
+                3,
+            ),
+        ),
+    ),
+    "CELL%NUM_SPECIES": (ScalarField("num_species_orig", int),),
+    "CELL%NUM_IONS_IN_SPECIES": (
+        ArrayField("num_ions_in_species_orig", int, ("num_species_orig",)),
+    ),
+    "CELL%IONIC_POSITIONS": (
+        ArrayField(
+            "ionic_positions",
+            float,
+            (3, "max_ions_in_species_orig", "num_species_orig"),
+        ),
+    ),
+    "CELL%SPECIES_SYMBOL": (
+        ArrayField("species_symbol_orig", "a8", ("num_species_orig",)),
+    ),
     # The "current" cell
-    "CELL%NUM_IONS_01": (ScalarField("num_ions", int), ),
-    "CELL%MAX_IONS_IN_SPECIES_01": (ScalarField("max_ions_in_species", int), ),
-    "CELL%REAL_LATTICE_01": (ArrayField("real_lattice", float, (
-        3,
-        3,
-    )), ),
-    "CELL%RECIP_LATTICE_01": (ArrayField("recip_lattice", float, (
-        3,
-        3,
-    )), ),
-    "CELL%NUM_SPECIES_01": (ScalarField("num_species", int), ),
-    "CELL%NUM_IONS_IN_SPECIES_01": (ArrayField("num_ions_in_species", int,
-                                               ("num_species", )), ),
-    "CELL%IONIC_POSITIONS_01":
-    (ArrayField("ionic_positions", float,
-                (3, "max_ions_in_species", "num_species")), ),
-    "CELL%SPECIES_SYMBOL_01": (ArrayField("species_symbol", 'a8',
-                                          ("num_species", )), ),
-    "NKPTS_01": (ScalarField("nkpts", int), ),
-    "KPOINTS_01":
-    (ArrayField("kpoints", float,
-                shape=(3, "nkpts")), ),  # Kpoints in the original order
-    "KPOINT_WEIGHTS_01":
-    (ArrayField("kpoint_weights", float,
-                shape=("nkpts", )), ),  # Weights in the original order
-
+    "CELL%NUM_IONS_01": (ScalarField("num_ions", int),),
+    "CELL%MAX_IONS_IN_SPECIES_01": (ScalarField("max_ions_in_species", int),),
+    "CELL%REAL_LATTICE_01": (
+        ArrayField(
+            "real_lattice",
+            float,
+            (
+                3,
+                3,
+            ),
+        ),
+    ),
+    "CELL%RECIP_LATTICE_01": (
+        ArrayField(
+            "recip_lattice",
+            float,
+            (
+                3,
+                3,
+            ),
+        ),
+    ),
+    "CELL%NUM_SPECIES_01": (ScalarField("num_species", int),),
+    "CELL%NUM_IONS_IN_SPECIES_01": (
+        ArrayField("num_ions_in_species", int, ("num_species",)),
+    ),
+    "CELL%IONIC_POSITIONS_01": (
+        ArrayField("ionic_positions", float, (3, "max_ions_in_species", "num_species")),
+    ),
+    "CELL%SPECIES_SYMBOL_01": (ArrayField("species_symbol", "a8", ("num_species",)),),
+    "NKPTS_01": (ScalarField("nkpts", int),),
+    "KPOINTS_01": (
+        ArrayField("kpoints", float, shape=(3, "nkpts")),
+    ),  # Kpoints in the original order
+    "KPOINT_WEIGHTS_01": (
+        ArrayField("kpoint_weights", float, shape=("nkpts",)),
+    ),  # Weights in the original order
     # Parameters starts after the end of the global section of the "current" cell
     "END_CELL_GLOBAL_01": (
-        BoolField("found_ground_state_wavefunction"
-                  ),  # Fortran logical saved as integer....
+        BoolField(
+            "found_ground_state_wavefunction"
+        ),  # Fortran logical saved as integer....
         BoolField("found_ground_state_density"),
         ScalarField("total_energy", float),
         ScalarField("fermi_energy", float),
-        CompositeField(
-            [ScalarField("nbands", int),
-             ScalarField("nspins", int)]),
-        EigenValueAndOccCompositeField(
-        ),  # Read the eigenvalues note that the arrays are reshaped
+        CompositeField([ScalarField("nbands", int), ScalarField("nspins", int)]),
+        EigenValueAndOccCompositeField(),  # Read the eigenvalues note that the arrays are reshaped
         BoolField("found_ground_state_density"),
-        CompositeField([
-            ScalarField("ngx_fine", int),
-            ScalarField("ngy_fine", int),
-            ScalarField("ngz_fine", int)
-        ]),
+        CompositeField(
+            [
+                ScalarField("ngx_fine", int),
+                ScalarField("ngy_fine", int),
+                ScalarField("ngz_fine", int),
+            ]
+        ),
         ChargeDensityField(),
     ),
-    "E_FERMI": (ScalarField("fermi_energy_second_spin", float), ),
-    "FORCES": (ArrayField("forces", float,
-                          (3, "max_ions_in_species", "num_species")), ),
-    "FORCE_CON": (ArrayField("phonon_supercell_matrix", int, (3, 3)),
-                  ArrayField("phonon_force_constant_matrix", float,
-                             (3, "num_ions", 3, "num_ions", "num_cells")),
-                  ArrayField("phonon_supercell_origins", int,
-                             (3, "num_cells")),
-                  ScalarField("phonon_force_constant_row", int)),
-    "BORN_CHGS": (ArrayField("born_charges", float, (3, 3, "num_ions")), ),
+    "E_FERMI": (ScalarField("fermi_energy_second_spin", float),),
+    "FORCES": (ArrayField("forces", float, (3, "max_ions_in_species", "num_species")),),
+    "FORCE_CON": (
+        ArrayField("phonon_supercell_matrix", int, (3, 3)),
+        ArrayField(
+            "phonon_force_constant_matrix",
+            float,
+            (3, "num_ions", 3, "num_ions", "num_cells"),
+        ),
+        ArrayField("phonon_supercell_origins", int, (3, "num_cells")),
+        ScalarField("phonon_force_constant_row", int),
+    ),
+    "BORN_CHGS": (ArrayField("born_charges", float, (3, 3, "num_ions")),),
+}
+
+# Specifications for the check file, the only difference is the additional wavefunction
+# data taht is between the "nspins" and the "EigenValueAndOccCompositeField"
+CASTEP_CHECK_FIELD_SPEC = {
+    **CASTEP_BIN_FIELD_SPEC,
+    "END_CELL_GLOBAL_01": (
+        BoolField(
+            "found_ground_state_wavefunction"
+        ),  # Fortran logical saved as integer....
+        BoolField("found_ground_state_density"),
+        ScalarField("total_energy", float),
+        ScalarField("fermi_energy", float),
+        CompositeField([ScalarField("nbands", int), ScalarField("nspins", int)]),
+        # Read the wave function
+        StrField("wave_header", "a4"),
+        CompositeField(
+            [
+                ScalarField("ngx", int),
+                ScalarField("ngy", int),
+                ScalarField("ngz", int),
+            ]
+        ),
+        # Here starts the wavefunction relaxed data
+        CompositeField(
+            [
+                ScalarField("wave_coeff_size_1", int),
+                ScalarField("wave_spinorcomps", int),
+                ScalarField("wave_nbands_max", int),
+                ScalarField("wave_nkpts", int),
+                ScalarField("wave_nspins", int),
+            ]
+        ),
+        WaveFunctionField(),
+        EigenValueAndOccCompositeField(),  # Read the eigenvalues note that the arrays are reshaped
+        BoolField("found_ground_state_density"),
+        CompositeField(
+            [
+                ScalarField("ngx_fine", int),
+                ScalarField("ngy_fine", int),
+                ScalarField("ngz_fine", int),
+            ]
+        ),
+        ChargeDensityField(),
+    ),
 }
 
 # Shape of each field
 CASTEP_BIN_FIELD_SHAPES = {
     field.name: field.shape
-    for tag in CASTEP_BIN_FIELD_SPEC for field in CASTEP_BIN_FIELD_SPEC[tag]
+    for value in CASTEP_BIN_FIELD_SPEC.values()
+    for field in value
     if isinstance(field, ArrayField)
 }
 
-# CASTEP_BIN_HEADERS = {
-#     "CELL%NUM_IONS": {
-#         "num_ions": (">i4", (1, ))
-#     },
-#     "CELL%MAX_IONS_IN_SPECIES": {
-#         "max_ions_in_species": (">i4", (1, ))
-#     },
-#     "CELL%REAL_LATTICE": {
-#         "real_lattice": (">f8", (3, 3))
-#     },
-#     "CELL%RECIP_LATTICE": {
-#         "recip_lattice": (">f8", (3, 3))
-#     },
-#     "CELL%NUM_SPECIES": {
-#         "num_species": (">i4", (1, ))
-#     },
-#     "CELL%NUM_IONS_IN_SPECIES": {
-#         "num_ions_in_species": (">i4", ("num_species", ))
-#     },
-#     "CELL%IONIC_POSITIONS": {
-#         "ionic_positions": (">f8", (3, "max_ions_in_species", "num_species"))
-#     },
-#     "CELL%SPECIES_SYMBOL": {
-#         "species_symbol": (">a8", ("num_species", ))
-#     },
-#     "FORCES": {
-#         "forces": (">f8", (3, "max_ions_in_species", "num_species"))
-#     },
-#     "FORCE_CON": {
-#         "phonon_supercell_matrix": (">i4", (3, 3)),
-#         "phonon_force_constant_matrix":
-#         (">f8", (3, "num_ions", 3, "num_ions", "num_cells")),
-#         "phonon_supercell_origins": (">i4", (3, "num_cells")),
-#         "phonon_force_constant_row": (">i4", (1, )),
-#     },
-#     "BORN_CHGS": {
-#         "born_charges": (">f8", (3, 3, "num_ions")),
-#     },
-# }
 
-# CASTEP_BIN_HEADERS_UNPACKED = {
-#     k: v
-#     for header in CASTEP_BIN_HEADERS
-#     for k, v in CASTEP_BIN_HEADERS[header].items()
-# }
-
-
-def read_castep_bin(filename: Union[str, Path] = None,
-                    fileobj=None,
-                    records_to_extract: Optional[Collection[str]] = None
-                    ) -> Dict[str, Any]:
+def read_castep_bin(
+    filename: Union[str, Path] = None,
+    fileobj=None,
+    records_to_extract: Optional[Collection[str]] = None,
+) -> Dict[str, Any]:
     """
     Read a castep_bin file for a given CASTEP run.
 
@@ -470,127 +568,59 @@ def read_castep_bin(filename: Union[str, Path] = None,
         <binary data>
         <length of binary data in bytes (record marker)>
 
-    Args:
-        filename: path of the file to be read
-        fileobj: An file-like object from which the data needs to be read
-        records_to_extract: A collection of CASTEP bin headers. If `None`,
-            extract all headers for which there is a defined shape specification
-            in `CASTEP_BIN_HEADERS`.
+    :param filename: path of the file to be read
+    :param fileobj: An file-like object from which the data needs to be read
+    :param records_to_extract: A collection of CASTEP bin headers. If `None`,
+        all headers for which there is a defined shape specification in `CASTEP_BIN_HEADERS`.
 
-    Returns:
-        A dictionary following the CASTEP header hierarchy found within
-        the castep_bin file, containing the decoded data.
-
+    :returns: A dictionary following the CASTEP header hierarchy found within
+    the castep_bin file, containing the decoded data.
     """
 
+    def _read_handle(f):
+        is_check, header_offset_map = _generate_header_offset_map(f)
+        f.seek(0)
+
+        castep_data = {}
+        spec = CASTEP_CHECK_FIELD_SPEC if is_check else CASTEP_BIN_FIELD_SPEC
+        for header, field in spec.items():
+
+            if (
+                records_to_extract
+                and header not in records_to_extract
+                and not header.startswith("CELL%")
+            ):
+                continue
+
+            if header not in header_offset_map:
+                if records_to_extract and header in records_to_extract:
+                    raise RuntimeError(
+                        f"Unable to find desired header {header} in file."
+                    )
+                continue
+
+            castep_data.update(
+                _decode_records(
+                    f,
+                    field,
+                    header_offset_map[header],
+                    castep_data,
+                )
+            )
+        return castep_data
+
     if filename is not None:
-        f = open(filename, mode='rb')
-    else:
-        f = fileobj
+        with open(filename, mode="rb") as fhandle:
+            return _read_handle(fhandle)
 
-    header_offset_map = _generate_header_offset_map(f)
-    f.seek(0)
-
-    castep_data = {}
-
-    for header in CASTEP_BIN_FIELD_SPEC:
-
-        if records_to_extract and header not in records_to_extract and not header.startswith(
-                "CELL%"):
-            continue
-
-        if header not in header_offset_map:
-            if records_to_extract and header in records_to_extract:
-                raise RuntimeError(
-                    f"Unable to find desired header {header} in file.")
-            continue
-
-        castep_data.update(
-            _decode_records(
-                f,
-                CASTEP_BIN_FIELD_SPEC[header],
-                header_offset_map[header],
-                castep_data,
-            ))
-
-    if filename is not None:
-        f.close()
-
-    return castep_data
-
-
-# def _reshape_arrays(castep_data: Dict[str, Any],
-#                     _requires: Optional[dict] = None) -> None:
-#     """Recursively solve for unknown dimensions across arrays, reshaping
-#     them along the way.
-
-#     Procedure will fail if any iteration starts with every un-reshaped field
-#     possessing multiple unknown dimensions.
-
-#     Unknown dimensions that are repeated (e.g., square matrix) will be solved.
-
-#     Args:
-#         castep_data: The dictionary of decoded but un-reshaped data, with keys
-#             from `CASTEP_BIN_FIELD_SHAPES`.
-#         _requires: Cache of remaining unknowns used for recursion.
-
-#     """
-#     if _requires is None:
-#         _requires = {}
-#     resolved_unknowns = {}
-#     for field in castep_data:
-#         if isinstance(castep_data[field], np.ndarray) and len(
-#                 castep_data[field].shape) == 1:
-#             shape = [
-#                 castep_data.get(s) or s for s in CASTEP_BIN_FIELD_SHAPES[field]
-#             ]
-#             _requires[field] = [s for s in shape if isinstance(s, str)]
-
-#             if len(set(_requires[field])) == 1:
-#                 # Attempt to resolve a single missing unknown.
-#                 # This unknown can appear in multiple dimensions of the same field.
-#                 unknown = _requires[field][0]
-#                 n = int(
-#                     np.round(
-#                         (castep_data[field].shape[0] //
-#                          np.prod([s for s in shape if s != unknown]))**1. /
-#                         len(_requires[field])))
-#                 castep_data[field] = np.reshape(
-#                     castep_data[field],
-#                     [n if isinstance(v, str) else v for v in shape],
-#                     order="F")
-#                 resolved_unknowns[unknown] = castep_data[field].shape[
-#                     shape.index(unknown)]
-#                 _requires.pop(field)
-
-#             elif not _requires[field]:
-#                 # Shape should now be fully-specified
-#                 castep_data[field] = np.reshape(castep_data[field],
-#                                                 shape,
-#                                                 order="F")
-#                 _requires.pop(field)
-
-#     castep_data.update(resolved_unknowns)
-#     for field in _requires:
-#         _requires[field] = [
-#             s for s in
-#             [castep_data.get(s) or s for s in CASTEP_BIN_FIELD_SHAPES[field]]
-#             if isinstance(s, str)
-#         ]
-#     # If all remaining fields have more than 1 unknown, give up
-#     if _requires and all(
-#             len(set(_requires[field])) > 1 for field in _requires):  # pylint: disable=bad-continuation
-#         raise RuntimeError(f"Too many unknowns to resolve: {_requires}")
-
-#     while _requires:
-#         _reshape_arrays(castep_data, _requires)
+    return _read_handle(fileobj)
 
 
 def _decode_records(
-        fp: io.BufferedReader,
-        record_specs: Tuple[FieldType],
-        offset: int,
-        decoded_data: dict = None,
+    fp: io.BufferedReader,
+    record_specs: Tuple[FieldType],
+    offset: int,
+    decoded_data: dict = None,
 ) -> Dict[str, Any]:
     """For a given file buffer, header name and byte offset, read
     the expected number of file records and decode them according to
@@ -634,7 +664,8 @@ def _decode_records(
                     offset *= np.prod(subspec.resolve_shape(decoded_data)[0])
                 assert offset > 0
                 decoded_data[subspec.name] = subspec.decode(
-                    fp, decoded_data, record_data=record_data)
+                    fp, decoded_data, record_data=record_data
+                )
                 record_data = record_data[offset:]
         elif isinstance(record_spec, StructuredField):
             record_spec.decode(fp, decoded_data)
@@ -642,30 +673,44 @@ def _decode_records(
     return decoded_data
 
 
-def _generate_header_offset_map(fileobj) -> Dict[str, int]:
-    """Scans a castep_bin file for recognisable headers, creating a
+def _decode_composite(fp, record_spec):
+    """Decode a composite field return the decoded data"""
+    record_data, _ = _read_record(fp)
+    decoded = []
+    for subspec in record_spec.fields:
+        offset = int(subspec.type_string[-1])
+        if isinstance(subspec, ArrayField):
+            offset *= np.prod(subspec.shape)
+        assert offset > 0
+        decoded.append(subspec.decode(fp, {}, record_data=record_data))
+        record_data = record_data[offset:]
+    return decoded
+
+
+def _generate_header_offset_map(fileobj) -> Tuple[bool, Dict[str, int]]:
+    """
+    Scans a castep_bin/check file for recognisable headers, creating a
     dictionary of their byte-offsets within the file. The stored
     offset corresponds to the start of the record immediately
     following the CASTEP header.
 
-    Args:
-        filename: The file to read.
+    :param fileobj: A file object from which the data should be read.
 
-    Returns:
-        A dictionary of headers mapped to the offsets of the following
-        record.
-
+    :returns: Tuple of (is_check, offset_map), where the latter is a dictionary of
+    headers mapped to the offsets of the following record.
     """
     header_offset_map: Dict[str, int] = {}
 
     f = fileobj
+    loc = f.tell()
 
     # Check first header is "CASTEP_BIN"
     header, _ = _read_record(f)
     header = header.decode("utf-8").strip("'")
+    is_check = False
     if header != "CASTEP_BIN":
-        raise RuntimeError(
-            f"File handler does not start with 'CASTEP_BIN' header.")
+        is_check = True
+        f.seek(loc)
 
     data = None
     while data != "END":
@@ -684,7 +729,7 @@ def _generate_header_offset_map(fileobj) -> Dict[str, int]:
         except (AttributeError, UnicodeDecodeError):
             pass
 
-    return header_offset_map
+    return is_check, header_offset_map
 
 
 def _find_header_suffix(name, header_offset_map):
@@ -696,14 +741,14 @@ def _find_header_suffix(name, header_offset_map):
             num = int(match.group(1))
             if num >= counter:
                 counter = num + 1
-    return f'{name}_{counter:02d}'
+    return f"{name}_{counter:02d}"
 
 
 def _read_record(
-        f: io.BufferedReader,
-        seek_only: bool = False,
-        record_marker_size: int = 4,
-        read_data_smaller_than=512,
+    f: io.BufferedReader,
+    seek_only: bool = False,
+    record_marker_size: int = 4,
+    read_data_smaller_than=512,
 ) -> Tuple[Optional[bytes], int]:
     """Reads the preceeding record marker for the next record in the
     file, decodes the record data, then reads the suffix record marker,
@@ -740,8 +785,9 @@ def _read_record(
     return data, marker
 
 
-def _read_marker(f: Union[io.BufferedReader, bytes],
-                 record_marker_size: int = 4) -> int:
+def _read_marker(
+    f: Union[io.BufferedReader, bytes], record_marker_size: int = 4
+) -> int:
     """Read the next *n* bytes from the buffer and try to interpret them
     as a Fortran record marker (typically uint4, but can depend on
     compiler).
