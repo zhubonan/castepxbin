@@ -15,6 +15,7 @@ from castepxbin.pdos import (
     read_pdos_bin,
     reorder_pdos_data,
 )
+from castepxbin.wave import coeff_to_recip, coords_to_indices
 
 
 @pytest.fixture
@@ -95,10 +96,36 @@ def test_castep_check_reader(castep_check_Si):
     assert "wavefunction" in data
     wfc = data["wavefunction"]
     assert "ngx" in wfc
-    assert "pw_grid_coord" in wfc
+    assert "pw_grid_coords" in wfc
     assert "coeffs" in wfc
     assert "kpts" in wfc
     assert "nwaves_at_kp" in wfc
+    mesh_size = np.array([wfc["ngx"], wfc["ngy"], wfc["ngz"]])
+    idx = coords_to_indices(wfc["pw_grid_coords"], mesh_size)
+    assert idx.min() == 0
+    assert idx.max() == mesh_size.max() - 1
+    grid = coeff_to_recip(
+        wfc["coeffs"], wfc["nwaves_at_kp"], wfc["pw_grid_coords"], *mesh_size
+    )
+
+    from castepxbin.wave import WaveFunction
+
+    wf = WaveFunction.from_dict(data)
+    mesh = wf.get_reciprocal_grid()
+    assert all(mesh.shape[:3] == wf.mesh_size)
+
+    assert wf.get_plane_wave_coeffs().size > 0
+    assert (
+        wf.get_plane_wave_coeffs(
+            ik=wf.nkpts - 1, ib=wf.nbands - 1, ispin=wf.nspins - 1
+        ).size
+        > 0
+    )
+    assert wf.get_gvectors().size > 0
+    assert wf.get_gvectors(ik=wf.nkpts - 1).size > 0
+    assert wf.get_gmesh_index().size > 0
+    assert wf.get_gmesh_index(ik=wf.nkpts - 1).size > 0
+    assert isinstance(wf.get_kpoints_cart(), np.ndarray)
 
 
 def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):

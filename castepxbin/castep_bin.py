@@ -281,6 +281,8 @@ class ChargeDensityField(StructuredField):
 class WaveFunctionField(StructuredField):
     """For reading the wave function"""
 
+    STORE_COEFFS = False
+
     @staticmethod
     def decode(fp, decoded_data, record_data=None):
         """
@@ -302,6 +304,7 @@ class WaveFunctionField(StructuredField):
             order="F",
             dtype=complex,
         )
+
         nwaves_at_kp = np.zeros(nkpts, dtype=int)
         kpts = np.zeros((3, nkpts), dtype=float, order="F")
         pw_grid_coord = np.zeros((3, coeff_size_1, nkpts), dtype=int, order="F")
@@ -336,7 +339,7 @@ class WaveFunctionField(StructuredField):
             "ngx": ngx,
             "ngy": ngy,
             "ngz": ngz,
-            "pw_grid_coord": pw_grid_coord,
+            "pw_grid_coords": pw_grid_coord,
             "coeffs": coeffs,
             "kpts": kpts,
             "nwaves_at_kp": nwaves_at_kp,
@@ -539,6 +542,7 @@ def read_castep_bin(
     filename: Union[str, Path] = None,
     fileobj=None,
     records_to_extract: Optional[Collection[str]] = None,
+    spec=None,
 ) -> Dict[str, Any]:
     """
     Read a castep_bin file for a given CASTEP run.
@@ -582,8 +586,9 @@ def read_castep_bin(
         f.seek(0)
 
         castep_data = {}
-        spec = CASTEP_CHECK_FIELD_SPEC if is_check else CASTEP_BIN_FIELD_SPEC
-        for header, field in spec.items():
+        if spec is None:
+            _spec = CASTEP_CHECK_FIELD_SPEC if is_check else CASTEP_BIN_FIELD_SPEC
+        for header, field in _spec.items():
 
             if (
                 records_to_extract
