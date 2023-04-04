@@ -7,9 +7,9 @@ import numpy as np
 import pytest
 import scipy.constants
 
-from .castep_bin import read_castep_bin
-from .ome_bin import read_cst_ome, read_dome_bin, read_ome_bin
-from .pdos import (
+from castepxbin.castep_bin import read_castep_bin
+from castepxbin.ome_bin import read_cst_ome, read_dome_bin, read_ome_bin
+from castepxbin.pdos import (
     OrbitalEnum,
     SpinEnum,
     read_pdos_bin,

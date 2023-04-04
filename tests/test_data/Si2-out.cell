@@ -273,4 +273,3 @@ SYMMETRY_TOL :     0.001000
 %ENDBLOCK symmetry_ops
 
 kpoint_mp_grid :   10  10  10
-
