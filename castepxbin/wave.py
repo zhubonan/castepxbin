@@ -76,6 +76,8 @@ class WaveFunction:
         kpts,
         recip_lattice,
         real_lattice,
+        eigenvalues,
+        occupancies,
     ):
         """Instantiate weave function reader"""
 
@@ -95,6 +97,8 @@ class WaveFunction:
         # CASTEP stores the lattice matrix with row vectors - these are all in atomic units
         self.recip_lattice = recip_lattice
         self.real_lattice = real_lattice
+        self.occupancies = occupancies
+        self.eigenvalues = eigenvalues
 
     @classmethod
     def from_dict(cls, full_data):
@@ -108,7 +112,7 @@ class WaveFunction:
         for key in ["coeffs", "pw_grid_coords", "nwaves_at_kp", "kpts"]:
             inputd[key] = wfc[key]
 
-        for key in ["real_lattice", "recip_lattice"]:
+        for key in ["real_lattice", "recip_lattice", "eigenvalues", "occupancies"]:
             inputd[key] = full_data[key]
 
         return cls(**inputd)
