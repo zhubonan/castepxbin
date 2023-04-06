@@ -182,6 +182,8 @@ class WaveFunction:  # pylint:disable=too-many-instance-attributes
         """
         Return the cartesian coordinates of the k-points
 
-        {note}`These are in the internal atomic units used by CASTEP.`
+        ```{note}
+        These are in the internal atomic units used by CASTEP.
+        ```
         """
         return self.recip_lattice.T @ self.kpts
