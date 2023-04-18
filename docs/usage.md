@@ -18,7 +18,7 @@ print("One Ha is {Hartree} eV")
 fermi_energy_in_eV = data['fermi_energy'] * Hartree
 ```
 
-# Supported files
+## Supported files
 
 pdos_bin
 : Stores the weights projected onto atomic orbitals for each band. This file is necessary for constructing *projected density of states*. This file is only written with `pdos_calculate_weights : true` in the *param* file.
