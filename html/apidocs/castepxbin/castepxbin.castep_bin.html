@@ -1,0 +1,898 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>castepxbin.castep_bin &#8212; castepxbin</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" href="../../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/clipboard.min.js"></script>
+    <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'apidocs/castepxbin/castepxbin.castep_bin';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="castepxbin.ome_bin" href="castepxbin.ome_bin.html" />
+    <link rel="prev" title="castepxbin.pdos" href="castepxbin.pdos.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">castepxbin</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/zhubonan/castepxbin" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/castepxbin/" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><img src="https://img.shields.io/pypi/v/castepxbin" class="icon-link-image" alt="PyPI"/></a>
+        </li>
+</ul></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="../../index.html">
+                    castepxbin documentation
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="castepxbin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin</span></code></a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="castepxbin.wave.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.wave</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="castepxbin.pdos.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.pdos</span></code></a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.castep_bin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="castepxbin.ome_bin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.ome_bin</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/zhubonan/castepxbin" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/apidocs/castepxbin/castepxbin.castep_bin.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>castepxbin.castep_bin</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data">Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <div class="section" id="module-castepxbin.castep_bin">
+<span id="castepxbin-castep-bin"></span><h1><a class="reference internal" href="#module-castepxbin.castep_bin" title="castepxbin.castep_bin"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.castep_bin</span></code></a><a class="headerlink" href="#module-castepxbin.castep_bin" title="Permalink to this heading">#</a></h1>
+<p>Reader module for CASTEP <code class="docutils literal notranslate"><span class="pre">castep_bin</span></code> files, a binary dump
+file that can contain the parameters, cell, model, and results
+(e.g., energies, forces, densities, wavefunctions) for a partciular
+CASTEP run.</p>
+<p>Reading this file can be beneficial as it uses the native floating-point
+precision of the CASTEP run itself.</p>
+<p>This implementation takes inspiration from similar functions in the
+the <a class="reference external" href="https://github.com/pace-neutrons/Euphonic">Euphonic</a> package.</p>
+<div class="section" id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">#</a></h2>
+<div class="section" id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading">#</a></h3>
+<table class="autosummary longtable table table-left">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.FieldType" title="castepxbin.castep_bin.FieldType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FieldType</span></code></a></p></td>
+<td><p>Abstract representation of the field type</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin.CompositeField" title="castepxbin.castep_bin.CompositeField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CompositeField</span></code></a></p></td>
+<td><p>Composition field - multiple entities are stored in a single record</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.ScalarField" title="castepxbin.castep_bin.ScalarField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScalarField</span></code></a></p></td>
+<td><p>Abstract Representation of sclar type</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin.SkippedField" title="castepxbin.castep_bin.SkippedField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SkippedField</span></code></a></p></td>
+<td><p>A field that will be skipped</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.ArrayField" title="castepxbin.castep_bin.ArrayField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArrayField</span></code></a></p></td>
+<td><p>Abstract Representation of a Array type</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin.StrField" title="castepxbin.castep_bin.StrField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StrField</span></code></a></p></td>
+<td><p>Abstract Representation of a Array type</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.BoolField" title="castepxbin.castep_bin.BoolField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BoolField</span></code></a></p></td>
+<td><p>A boolean field</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin.StructuredField" title="castepxbin.castep_bin.StructuredField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StructuredField</span></code></a></p></td>
+<td><p>A field that require case-by-case parsing</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.EigenValueAndOccCompositeField" title="castepxbin.castep_bin.EigenValueAndOccCompositeField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EigenValueAndOccCompositeField</span></code></a></p></td>
+<td><p>Complex field for the eigenvalues and the occupations</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin.ChargeDensityField" title="castepxbin.castep_bin.ChargeDensityField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ChargeDensityField</span></code></a></p></td>
+<td><p>For reading charge density</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.WaveFunctionField" title="castepxbin.castep_bin.WaveFunctionField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveFunctionField</span></code></a></p></td>
+<td><p>For reading the wave function</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">#</a></h3>
+<table class="autosummary longtable table table-left">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.read_castep_bin" title="castepxbin.castep_bin.read_castep_bin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_castep_bin</span></code></a></p></td>
+<td><p>Read a castep_bin file for a given CASTEP run.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin._decode_records" title="castepxbin.castep_bin._decode_records"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_decode_records</span></code></a></p></td>
+<td><p>For a given file buffer, header name and byte offset, read
+the expected number of file records and decode them according to
+the type and shape specification provided in <code class="docutils literal notranslate"><span class="pre">CASTEP_BIN_HEADERS</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin._decode_composite" title="castepxbin.castep_bin._decode_composite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_decode_composite</span></code></a></p></td>
+<td><p>Decode a composite field return the decoded data</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin._generate_header_offset_map" title="castepxbin.castep_bin._generate_header_offset_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_generate_header_offset_map</span></code></a></p></td>
+<td><p>Scans a castep_bin/check file for recognisable headers, creating a
+dictionary of their byte-offsets within the file. The stored
+offset corresponds to the start of the record immediately
+following the CASTEP header.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin._find_header_suffix" title="castepxbin.castep_bin._find_header_suffix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_find_header_suffix</span></code></a></p></td>
+<td><p>Found a suitable suffix the a given header name with number suffix</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin._read_record" title="castepxbin.castep_bin._read_record"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_read_record</span></code></a></p></td>
+<td><p>Reads the preceeding record marker for the next record in the
+file, decodes the record data, then reads the suffix record marker,
+eventually returning the decoded record data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin._read_marker" title="castepxbin.castep_bin._read_marker"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_read_marker</span></code></a></p></td>
+<td><p>Read the next <em>n</em> bytes from the buffer and try to interpret them
+as a Fortran record marker (typically uint4, but can depend on
+compiler).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="data">
+<h3>Data<a class="headerlink" href="#data" title="Permalink to this heading">#</a></h3>
+<table class="autosummary longtable table table-left">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.__all__" title="castepxbin.castep_bin.__all__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__all__</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin.TYPE_MAP" title="castepxbin.castep_bin.TYPE_MAP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TYPE_MAP</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.CASTEP_BIN_FIELD_SPEC" title="castepxbin.castep_bin.CASTEP_BIN_FIELD_SPEC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CASTEP_BIN_FIELD_SPEC</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#castepxbin.castep_bin.CASTEP_CHECK_FIELD_SPEC" title="castepxbin.castep_bin.CASTEP_CHECK_FIELD_SPEC"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CASTEP_CHECK_FIELD_SPEC</span></code></a></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.castep_bin.CASTEP_BIN_FIELD_SHAPES" title="castepxbin.castep_bin.CASTEP_BIN_FIELD_SHAPES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CASTEP_BIN_FIELD_SHAPES</span></code></a></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="api">
+<h3>API<a class="headerlink" href="#api" title="Permalink to this heading">#</a></h3>
+<dl class="py data">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.__all__">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">__all__</span></span><a class="headerlink" href="#castepxbin.castep_bin.__all__" title="Permalink to this definition">#</a></dt>
+<dd><p>(‘read_castep_bin’,)</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.TYPE_MAP">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">TYPE_MAP</span></span><a class="headerlink" href="#castepxbin.castep_bin.TYPE_MAP" title="Permalink to this definition">#</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.FieldType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">FieldType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIG'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.FieldType" title="Permalink to this definition">#</a></dt>
+<dd><p>Abstract representation of the field type</p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.FieldType.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.FieldType.decode" title="Permalink to this definition">#</a></dt>
+<dd><p>Decode the field with given file object or existing byte array</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.CompositeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">CompositeField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#castepxbin.castep_bin.FieldType" title="castepxbin.castep_bin.FieldType"><span class="pre">castepxbin.castep_bin.FieldType</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.CompositeField" title="Permalink to this definition">#</a></dt>
+<dd><p>Composition field - multiple entities are stored in a single record</p>
+<p class="rubric">Initialization</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.ScalarField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">ScalarField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIG'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.ScalarField" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#castepxbin.castep_bin.FieldType" title="castepxbin.castep_bin.FieldType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">castepxbin.castep_bin.FieldType</span></code></a></p>
+<p>Abstract Representation of sclar type</p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.ScalarField.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.ScalarField.decode" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.ScalarField.shape">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#castepxbin.castep_bin.ScalarField.shape" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.SkippedField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">SkippedField</span></span><a class="headerlink" href="#castepxbin.castep_bin.SkippedField" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#castepxbin.castep_bin.FieldType" title="castepxbin.castep_bin.FieldType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">castepxbin.castep_bin.FieldType</span></code></a></p>
+<p>A field that will be skipped</p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.SkippedField.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.SkippedField.decode" title="Permalink to this definition">#</a></dt>
+<dd><p>Recode - read the field the advance the stream</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.ArrayField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">ArrayField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIG'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.ArrayField" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#castepxbin.castep_bin.ScalarField" title="castepxbin.castep_bin.ScalarField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">castepxbin.castep_bin.ScalarField</span></code></a></p>
+<p>Abstract Representation of a Array type</p>
+<p class="rubric">Initialization</p>
+<p>Instantiate an array field</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.ArrayField.shape">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#castepxbin.castep_bin.ArrayField.shape" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.ArrayField.resolve_shape">
+<span class="sig-name descname"><span class="pre">resolve_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.ArrayField.resolve_shape" title="Permalink to this definition">#</a></dt>
+<dd><p>Resolve the shape of the array</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.ArrayField.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.ArrayField.decode" title="Permalink to this definition">#</a></dt>
+<dd><p>Decode the array from the record</p>
+<p>Try to resolve single unresolved dimensions. The resolved size will be
+stored in the decoded data. Search of the data can be either from a
+the file object, or from an buffer that is already read. The latter
+case is needed so composite record can be supported….</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.StrField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">StrField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIG'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.StrField" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#castepxbin.castep_bin.ScalarField" title="castepxbin.castep_bin.ScalarField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">castepxbin.castep_bin.ScalarField</span></code></a></p>
+<p>Abstract Representation of a Array type</p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.StrField.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.StrField.decode" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.BoolField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">BoolField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIG'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.BoolField" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#castepxbin.castep_bin.ScalarField" title="castepxbin.castep_bin.ScalarField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">castepxbin.castep_bin.ScalarField</span></code></a></p>
+<p>A boolean field</p>
+<p>Note that LOGICAL type is typically represented as INTEGER by Fortran.
+Different compilers may have different conventions, but 0 can be consistently
+identified as .FALSE.</p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.BoolField.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.BoolField.decode" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.StructuredField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">StructuredField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIG'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.StructuredField" title="Permalink to this definition">#</a></dt>
+<dd><p>A field that require case-by-case parsing</p>
+<p class="rubric">Initialization</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.EigenValueAndOccCompositeField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">EigenValueAndOccCompositeField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIG'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.EigenValueAndOccCompositeField" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#castepxbin.castep_bin.StructuredField" title="castepxbin.castep_bin.StructuredField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">castepxbin.castep_bin.StructuredField</span></code></a></p>
+<p>Complex field for the eigenvalues and the occupations</p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.EigenValueAndOccCompositeField.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.EigenValueAndOccCompositeField.decode" title="Permalink to this definition">#</a></dt>
+<dd><p>Decode the occupation and eigenvalues field</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.ChargeDensityField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">ChargeDensityField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIG'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.ChargeDensityField" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#castepxbin.castep_bin.StructuredField" title="castepxbin.castep_bin.StructuredField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">castepxbin.castep_bin.StructuredField</span></code></a></p>
+<p>For reading charge density</p>
+<p class="rubric">Initialization</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.ChargeDensityField.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.ChargeDensityField.decode" title="Permalink to this definition">#</a></dt>
+<dd><p>Decode the charge density</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.WaveFunctionField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">WaveFunctionField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">endian</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIG'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.WaveFunctionField" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#castepxbin.castep_bin.StructuredField" title="castepxbin.castep_bin.StructuredField"><code class="xref py py-obj docutils literal notranslate"><span class="pre">castepxbin.castep_bin.StructuredField</span></code></a></p>
+<p>For reading the wave function</p>
+<p class="rubric">Initialization</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.WaveFunctionField.STORE_COEFFS">
+<span class="sig-name descname"><span class="pre">STORE_COEFFS</span></span><a class="headerlink" href="#castepxbin.castep_bin.WaveFunctionField.STORE_COEFFS" title="Permalink to this definition">#</a></dt>
+<dd><p>False</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.WaveFunctionField.decode">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin.WaveFunctionField.decode" title="Permalink to this definition">#</a></dt>
+<dd><p>Decode the charge density</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.CASTEP_BIN_FIELD_SPEC">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">CASTEP_BIN_FIELD_SPEC</span></span><a class="headerlink" href="#castepxbin.castep_bin.CASTEP_BIN_FIELD_SPEC" title="Permalink to this definition">#</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.CASTEP_CHECK_FIELD_SPEC">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">CASTEP_CHECK_FIELD_SPEC</span></span><a class="headerlink" href="#castepxbin.castep_bin.CASTEP_CHECK_FIELD_SPEC" title="Permalink to this definition">#</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.CASTEP_BIN_FIELD_SHAPES">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">CASTEP_BIN_FIELD_SHAPES</span></span><a class="headerlink" href="#castepxbin.castep_bin.CASTEP_BIN_FIELD_SHAPES" title="Permalink to this definition">#</a></dt>
+<dd><p>None</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="castepxbin.castep_bin.read_castep_bin">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">read_castep_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fileobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">records_to_extract</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Collection</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#castepxbin.castep_bin.read_castep_bin" title="Permalink to this definition">#</a></dt>
+<dd><p>Read a castep_bin file for a given CASTEP run.</p>
+<p>Fortran binary files consist of records, one for each Fortran <code class="docutils literal notranslate"><span class="pre">write</span></code>
+statement used to create the file. Each record is surrounded by
+a <em>record marker</em> that encodes the length of the record in bytes.</p>
+<p>The length of the record markers themselves are compiler-dependent,
+but ifort and gfortran 4.2+ have settled on 4-byte markers with an
+additional sign bit to indicate that more data follows.</p>
+<p>Further notes on this can be found in the documentation of the
+<a class="reference external" href="https://traktofon.github.io/FortranFiles.jl/stable/files.html#Terminology-1">FortranFiles.jl</a>
+Julia package.</p>
+<p>CASTEP then additionally organises these records into sections
+denoted by string headers (with possible values from <code class="docutils literal notranslate"><span class="pre">CASTEP_BIN_HEADERS</span></code>),
+which themselves are Fortran file records.</p>
+<p>For example, a file might be structured like:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;length of string header&gt;
+&lt;string header&gt;
+&lt;length of string header&gt;
+&lt;length of binary data in bytes (record marker)&gt;
+&lt;binary data&gt;
+&lt;length of binary data in bytes (record marker)&gt;
+</pre></div>
+</div>
+<p>:param filename: path of the file to be read
+:param fileobj: An file-like object from which the data needs to be read
+:param records_to_extract: A collection of CASTEP bin headers. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+all headers for which there is a defined shape specification in <code class="docutils literal notranslate"><span class="pre">CASTEP_BIN_HEADERS</span></code>.</p>
+<p>:returns: A dictionary following the CASTEP header hierarchy found within
+the castep_bin file, containing the decoded data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="castepxbin.castep_bin._decode_records">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">_decode_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">io.BufferedReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_specs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#castepxbin.castep_bin.FieldType" title="castepxbin.castep_bin.FieldType"><span class="pre">castepxbin.castep_bin.FieldType</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoded_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#castepxbin.castep_bin._decode_records" title="Permalink to this definition">#</a></dt>
+<dd><p>For a given file buffer, header name and byte offset, read
+the expected number of file records and decode them according to
+the type and shape specification provided in <code class="docutils literal notranslate"><span class="pre">CASTEP_BIN_HEADERS</span></code>.</p>
+<p>Note:
+The file buffer will not be reset to its initial position.</p>
+<p>Args:
+fp: The open file buffer.
+record_spec: An ordered dictionary with an entry per expected
+record, containing a tuple for <code class="docutils literal notranslate"><span class="pre">(dtype,</span> <span class="pre">shape)</span></code>. Unknown
+dimensions can be indicated by string values in <code class="docutils literal notranslate"><span class="pre">shape</span></code>.
+These unknowns will be resolved where possible and returned
+in the final output dictionary.
+offset: The byte offset at which the records start in the buffer.
+decoded_data: Data that has been decoded - need for getting array sizes.</p>
+<p>Returns:
+A dictionary containing the decoded data, and any named unknowns
+that were resolved in this pass.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="castepxbin.castep_bin._decode_composite">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">_decode_composite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin._decode_composite" title="Permalink to this definition">#</a></dt>
+<dd><p>Decode a composite field return the decoded data</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="castepxbin.castep_bin._generate_header_offset_map">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">_generate_header_offset_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileobj</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#castepxbin.castep_bin._generate_header_offset_map" title="Permalink to this definition">#</a></dt>
+<dd><p>Scans a castep_bin/check file for recognisable headers, creating a
+dictionary of their byte-offsets within the file. The stored
+offset corresponds to the start of the record immediately
+following the CASTEP header.</p>
+<p>:param fileobj: A file object from which the data should be read.</p>
+<p>:returns: Tuple of (is_check, offset_map), where the latter is a dictionary of
+headers mapped to the offsets of the following record.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="castepxbin.castep_bin._find_header_suffix">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">_find_header_suffix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header_offset_map</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.castep_bin._find_header_suffix" title="Permalink to this definition">#</a></dt>
+<dd><p>Found a suitable suffix the a given header name with number suffix</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="castepxbin.castep_bin._read_record">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">_read_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">io.BufferedReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seek_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_marker_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_data_smaller_than</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#castepxbin.castep_bin._read_record" title="Permalink to this definition">#</a></dt>
+<dd><p>Reads the preceeding record marker for the next record in the
+file, decodes the record data, then reads the suffix record marker,
+eventually returning the decoded record data.</p>
+<p>Args:
+f: The open binary file stream in the buffer.
+record_marker_size: The compiler-dependent size of the record
+marker used to indicate the data record size.
+seek_only: If <code class="docutils literal notranslate"><span class="pre">True</span></code>, do not read the data, but instead skip
+over it.
+read_data_smaller_than: read any data smaller than this number
+of bytes, taking precedence over <code class="docutils literal notranslate"><span class="pre">seek_only</span></code>.</p>
+<p>Returns:
+The byte data from the record, or None, if <code class="docutils literal notranslate"><span class="pre">seek_only</span></code> and the
+record exceeded the chosen size.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="castepxbin.castep_bin._read_marker">
+<span class="sig-prename descclassname"><span class="pre">castepxbin.castep_bin.</span></span><span class="sig-name descname"><span class="pre">_read_marker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">io.BufferedReader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_marker_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#castepxbin.castep_bin._read_marker" title="Permalink to this definition">#</a></dt>
+<dd><p>Read the next <em>n</em> bytes from the buffer and try to interpret them
+as a Fortran record marker (typically uint4, but can depend on
+compiler).</p>
+<p>Args:
+f: An open file buffer.
+record_marker_size: The number of bytes to read as a record marker.</p>
+<p>Returns:
+The integer record marker.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="castepxbin.pdos.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.pdos</span></code></p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="castepxbin.ome_bin.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.ome_bin</span></code></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data">Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Bonan Zhu
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2021, Bonan Zhu.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
