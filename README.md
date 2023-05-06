@@ -1,5 +1,6 @@
 # castepxbin
 
+[Documentation](https://zhubonan.github.io/castepxbin/)
 ## Overview
 
 A collection of readers for binary output from [CASTEP](http://www.castep.org).

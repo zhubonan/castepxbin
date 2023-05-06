@@ -1,31 +1,46 @@
 # Install pre-commit hooks via:
 # pre-commit install
-
 repos:
--  repo: https://github.com/pre-commit/pre-commit-hooks
-   rev: v1.2.3
-   hooks:
-   - id: trailing-whitespace
-
-- repo: https://github.com/pre-commit/mirrors-yapf
-  rev: v0.28.0
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.1.0
   hooks:
-  - id: yapf
-    name: yapf
-    args: ["-i"]
+    - id: end-of-file-fixer
+      exclude: ^tests/data
+    - id: mixed-line-ending
+      exclude: ^tests/data
+    - id: trailing-whitespace
+      exclude: ^tests/data
+    - id: check-json
+      exclude: ^tests/data
 
-- repo: https://github.com/PyCQA/prospector
-  rev: 1.1.7
+
+- repo: https://github.com/asottile/pyupgrade
+  rev: v2.31.0
   hooks:
-  - id: prospector
-    language: system
-    types: [python]
-    exclude: "(^docs)|(^.github)"
+  - id: pyupgrade
+    args: ["--py37-plus"]
+
+- repo: https://github.com/PyCQA/isort
+  rev: 5.10.1
+  hooks:
+    - id: isort
+      args: ["--profile", "black",  --line-length=72]
+
+- repo: https://github.com/psf/black
+  rev: 22.3.0
+  hooks:
+    - id: black
+      exclude: ^tests/data
 
 - repo: local
   hooks:
-  - id: version-number
-    name: Check version numbers
-    entry: python ./.github/check_version.py
+  - id: pylint
     language: system
-    files: '^(setup.json)|(aiida_fireworks_scheduler/__init__.py)'
+    types: [file, python]
+    name: pylint
+    description: "This hook runs the pylint static code analyzer"
+    exclude: &exclude_files >
+      (?x)^(
+          docs/.*|
+      )$
+    entry: pylint
