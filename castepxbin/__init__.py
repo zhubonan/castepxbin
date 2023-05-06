@@ -5,4 +5,4 @@ from .castep_bin import *
 from .ome_bin import *
 from .pdos import *
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
