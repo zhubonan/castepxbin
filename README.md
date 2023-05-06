@@ -8,6 +8,8 @@ A collection of readers for binary output from [CASTEP](http://www.castep.org).
 Available readers for:
 
 - `castep_bin`: The compact checkpoint file contains all internal data stored by CASTEP (excluding the wavefunction) and may be read for restarting. High precision forces can be read from this file for single point calculations, as the `geom` file not written.
+- `check`: Same as `castep_bin` but includes wave function data (SCF kpoints).
+- `orbitals`: Same as `check` but includes wave function data for sampled (none-SCF) k-points in spectral/bandstructure/optics tasks.
 - `pdos_bin`: Weights for computing the projected density of states.
 - `ome_bin`: Optical matrix elements from the *Spectral* task.
 - `dome_bin`: Diagonal elements (band gradients) of the optical matrix from the *Spectral* task.
