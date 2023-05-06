@@ -7,7 +7,8 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
     <title>Usage &#8212; castepxbin</title>
   
   
@@ -37,10 +38,8 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
     <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
@@ -165,9 +164,9 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="apidocs/index.html">API Reference</a><input checked class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="apidocs/castepxbin/castepxbin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="apidocs/castepxbin/castepxbin.wave.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.wave</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="apidocs/castepxbin/castepxbin.ome_bin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.ome_bin</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="apidocs/castepxbin/castepxbin.pdos.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.pdos</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="apidocs/castepxbin/castepxbin.castep_bin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.castep_bin</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="apidocs/castepxbin/castepxbin.ome_bin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.ome_bin</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -345,7 +344,7 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <div class="section" id="usage">
+  <section class="tex2jax_ignore mathjax_ignore" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h1>
 <p>This package only provides basic, low level interfaces for reading data rather than performing any analysis.</p>
 <p>No unit conversion is carried out - any numerical values returned are simply in the internal unit used by CASTEP.
@@ -360,35 +359,37 @@ In most cases, they are in the <a class="reference external" href="https://en.wi
 <span class="n">fermi_energy_in_eV</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;fermi_energy&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">Hartree</span>
 </pre></div>
 </div>
-<div class="section" id="supported-files">
+<section id="supported-files">
 <h2>Supported files<a class="headerlink" href="#supported-files" title="Permalink to this heading">#</a></h2>
-<p>pdos_bin
-: Stores the weights projected onto atomic orbitals for each band. This file is necessary for constructing <em>projected density of states</em>. This file is only written with <code class="docutils literal notranslate"><span class="pre">pdos_calculate_weights</span> <span class="pre">:</span> <span class="pre">true</span></code> in the <em>param</em> file.
+<dl class="simple myst">
+<dt>pdos_bin</dt><dd><p>Stores the weights projected onto atomic orbitals for each band. This file is necessary for constructing <em>projected density of states</em>. This file is only written with <code class="docutils literal notranslate"><span class="pre">pdos_calculate_weights</span> <span class="pre">:</span> <span class="pre">true</span></code> in the <em>param</em> file.
 Use <a class="reference internal" href="apidocs/castepxbin/castepxbin.pdos.html#castepxbin.pdos.read_pdos_bin" title="castepxbin.pdos.read_pdos_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_pdos_bin</span></code></a> to parse this file. It returns a dictionary of arrays.</p>
 <p>The arrays are not arranged in the most sensible way and one may want to use <a class="reference internal" href="apidocs/castepxbin/castepxbin.pdos.html#castepxbin.pdos.reorder_pdos_data" title="castepxbin.pdos.reorder_pdos_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">reorder_pdos_data</span></code></a> to process it so the species, ion number and orbitals are assigned.
 The <a class="reference internal" href="apidocs/castepxbin/castepxbin.pdos.html#castepxbin.pdos.compute_pdos" title="castepxbin.pdos.compute_pdos"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_pdos</span></code></a> function can be used to obtain the projected-density of states,
 but one needs to supply the eigenvalues (mind the units) and the weighting of the kpoints.</p>
-<p>ome_bin
-: Stores the optical matrix elements from a <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">:</span> <span class="pre">spectral</span></code> calculation with <em>spectral_task</em> being one of <em>optics</em>, <em>coreless</em>, <em>all</em>.</p>
-<p>dome_bin
-: Stores the diagonal elements of the optical matrix from a <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">:</span> <span class="pre">spectral</span></code> calculation with <em>spectral_task</em> being <em>dos</em>.</p>
-<p>cst_ome
-: Stores the optical matrix elements from a <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">:</span> <span class="pre">optics</span></code> calculation.</p>
-<p>check
-: Stores most calculated quantities and can be used for restarting a calculation.</p>
-<p>castep_bin
-: This file is essentially the same as <code class="docutils literal notranslate"><span class="pre">check</span></code> except it does not include the wave functions.</p>
-<p>orbitals
-: This file is very similar to <code class="docutils literal notranslate"><span class="pre">check</span></code> but stores wave functions of non-self-consistent field calculations, e.g. those from band structure and density of states calculations with fine sampling grids (<em>task</em> in <em>spectral</em>, <em>bandstructure</em>, and <em>optics</em>).
+</dd>
+<dt>ome_bin</dt><dd><p>Stores the optical matrix elements from a <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">:</span> <span class="pre">spectral</span></code> calculation with <em>spectral_task</em> being one of <em>optics</em>, <em>coreless</em>, <em>all</em>.</p>
+</dd>
+<dt>dome_bin</dt><dd><p>Stores the diagonal elements of the optical matrix from a <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">:</span> <span class="pre">spectral</span></code> calculation with <em>spectral_task</em> being <em>dos</em>.</p>
+</dd>
+<dt>cst_ome</dt><dd><p>Stores the optical matrix elements from a <code class="docutils literal notranslate"><span class="pre">task</span> <span class="pre">:</span> <span class="pre">optics</span></code> calculation.</p>
+</dd>
+<dt>check</dt><dd><p>Stores most calculated quantities and can be used for restarting a calculation.</p>
+</dd>
+<dt>castep_bin</dt><dd><p>This file is essentially the same as <code class="docutils literal notranslate"><span class="pre">check</span></code> except it does not include the wave functions.</p>
+</dd>
+<dt>orbitals</dt><dd><p>This file is very similar to <code class="docutils literal notranslate"><span class="pre">check</span></code> but stores wave functions of non-self-consistent field calculations, e.g. those from band structure and density of states calculations with fine sampling grids (<em>task</em> in <em>spectral</em>, <em>bandstructure</em>, and <em>optics</em>).
 Activated by setting <code class="docutils literal notranslate"><span class="pre">write_orbitals</span> <span class="pre">:</span> <span class="pre">true</span></code> in the <em>param</em> file.</p>
+</dd>
+</dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Both <code class="docutils literal notranslate"><span class="pre">orbitals</span></code> and <code class="docutils literal notranslate"><span class="pre">check</span></code> files can be read with <a class="reference internal" href="apidocs/castepxbin/castepxbin.castep_bin.html#castepxbin.castep_bin.read_castep_bin" title="castepxbin.castep_bin.read_castep_bin"><code class="xref py py-func docutils literal notranslate"><span class="pre">castepxbin.castep_bin.read_castep_bin()</span></code></a> function.
 The wave function will be read so make sure you have enough memory available.
 At the moment, the packages does not support reading subsets of the wave function.</p>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
                 </article>

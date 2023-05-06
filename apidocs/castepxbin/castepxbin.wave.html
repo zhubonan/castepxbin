@@ -7,7 +7,8 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
     <title>castepxbin.wave &#8212; castepxbin</title>
   
   
@@ -37,17 +38,15 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
-    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'apidocs/castepxbin/castepxbin.wave';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="castepxbin.pdos" href="castepxbin.pdos.html" />
+    <link rel="next" title="castepxbin.ome_bin" href="castepxbin.ome_bin.html" />
     <link rel="prev" title="castepxbin" href="castepxbin.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -165,9 +164,9 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">API Reference</a><input checked class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="castepxbin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin</span></code></a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l3 current active"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.wave</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="castepxbin.ome_bin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.ome_bin</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="castepxbin.pdos.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.pdos</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="castepxbin.castep_bin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.castep_bin</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="castepxbin.ome_bin.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.ome_bin</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -336,7 +335,21 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.coords_to_indices"><code class="docutils literal notranslate"><span class="pre">coords_to_indices()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.coeff_to_recip"><code class="docutils literal notranslate"><span class="pre">coeff_to_recip()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction"><code class="docutils literal notranslate"><span class="pre">WaveFunction</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.from_dict"><code class="docutils literal notranslate"><span class="pre">WaveFunction.from_dict()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.from_file"><code class="docutils literal notranslate"><span class="pre">WaveFunction.from_file()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_reciprocal_grid"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_reciprocal_grid()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_plane_wave_coeffs"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_plane_wave_coeffs()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_gvectors"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_gvectors()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_gmesh_index"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_gmesh_index()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_kpoints_cart"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_kpoints_cart()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -350,32 +363,24 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <div class="section" id="module-castepxbin.wave">
+  <section class="tex2jax_ignore mathjax_ignore" id="module-castepxbin.wave">
 <span id="castepxbin-wave"></span><h1><a class="reference internal" href="#module-castepxbin.wave" title="castepxbin.wave"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.wave</span></code></a><a class="headerlink" href="#module-castepxbin.wave" title="Permalink to this heading">#</a></h1>
 <p>Functions for handling wave function related data</p>
-<div class="section" id="module-contents">
+<section id="module-contents">
 <h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this heading">#</a></h2>
-<div class="section" id="classes">
+<section id="classes">
 <h3>Classes<a class="headerlink" href="#classes" title="Permalink to this heading">#</a></h3>
 <table class="autosummary longtable table table-left">
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.wave.WaveFunction" title="castepxbin.wave.WaveFunction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveFunction</span></code></a></p></td>
 <td><p>Class for handling the wave function</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="functions">
+</section>
+<section id="functions">
 <h3>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">#</a></h3>
 <table class="autosummary longtable table table-left">
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#castepxbin.wave.coords_to_indices" title="castepxbin.wave.coords_to_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coords_to_indices</span></code></a></p></td>
 <td><p>Convert reciprocal lattice indexing to a grid
@@ -389,8 +394,8 @@ that is ready to be inverse FFTed.</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="api">
+</section>
+<section id="api">
 <h3>API<a class="headerlink" href="#api" title="Permalink to this heading">#</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="castepxbin.wave.coords_to_indices">
@@ -406,8 +411,14 @@ on to a reciprocal space grid.</p>
 <dd><p>Convert compact coefficient representation to a full reciprocal
 grid representation for the wave function. The output data is on a 3D grid
 that is ready to be inverse FFTed.</p>
-<p>:param coeffs: Plane wave coefficients, in the shape of (npw, nspinor, nb, nk, nspins)</p>
-<p>:return: The plane wave coefficients on the grid, in the shape of (ngx, ngy, ngz, nspinor, nband, nk, nspins)</p>
+<dl class="myst field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coeffs</strong> – Plane wave coefficients, in the shape of (npw, nspinor, nb, nk, nspins)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The plane wave coefficients on the grid, in the shape of (ngx, ngy, ngz, nspinor, nband, nk, nspins)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py class">
@@ -427,7 +438,11 @@ check file.</p>
 <dt class="sig sig-object py" id="castepxbin.wave.WaveFunction.from_file">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BinaryIO</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#castepxbin.wave.WaveFunction.from_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Load directly from a file or a file object</p>
-<p>:param fname: Name of the file or a file-like object.</p>
+<dl class="myst field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fname</strong> – Name of the file or a file-like object.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -466,9 +481,9 @@ check file.</p>
 
 </dd></dl>
 
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
                 </article>
@@ -492,11 +507,11 @@ check file.</p>
       </div>
     </a>
     <a class="right-next"
-       href="castepxbin.pdos.html"
+       href="castepxbin.ome_bin.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.pdos</span></code></p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">castepxbin.ome_bin</span></code></p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -521,7 +536,21 @@ check file.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api">API</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.coords_to_indices"><code class="docutils literal notranslate"><span class="pre">coords_to_indices()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.coeff_to_recip"><code class="docutils literal notranslate"><span class="pre">coeff_to_recip()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction"><code class="docutils literal notranslate"><span class="pre">WaveFunction</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.from_dict"><code class="docutils literal notranslate"><span class="pre">WaveFunction.from_dict()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.from_file"><code class="docutils literal notranslate"><span class="pre">WaveFunction.from_file()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_reciprocal_grid"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_reciprocal_grid()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_plane_wave_coeffs"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_plane_wave_coeffs()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_gvectors"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_gvectors()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_gmesh_index"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_gmesh_index()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#castepxbin.wave.WaveFunction.get_kpoints_cart"><code class="docutils literal notranslate"><span class="pre">WaveFunction.get_kpoints_cart()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
