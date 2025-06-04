@@ -28,7 +28,7 @@ dependencies = ["numpy>=1,<2", "scipy>=1,<2"]
 [project.optional-dependencies]
 doc = [
     "sphinx-click>=4,<5", "sphinx-autodoc2>=0.4,<0.5", "sphinx-book-theme>=1,<2", "sphinx-copybutton>=0.3,<0.4",
-    "myst-parser[linkify]", "sphinx", "linkify-it-py"
+    "myst-parser[linkify]", "sphinx>=6,<7", "linkify-it-py"
 ]
 test = ["pytest", "pytest-cov", "coverage"]
 "pre-commit" = [
