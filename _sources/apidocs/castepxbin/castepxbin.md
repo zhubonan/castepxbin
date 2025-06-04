@@ -14,9 +14,9 @@
 :maxdepth: 1
 
 castepxbin.wave
-castepxbin.ome_bin
 castepxbin.pdos
 castepxbin.castep_bin
+castepxbin.ome_bin
 ```
 
 ## Package Contents
