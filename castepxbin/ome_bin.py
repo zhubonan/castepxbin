@@ -81,7 +81,7 @@ def read_cst_ome(fname, num_bands, num_kpoints, num_spins, endian='big'):
                     for ib1 in range(num_bands):
                         for ib2 in range(num_bands):
                             om[si, ki, idx, ib1, ib2] = fhandle.read_record(
-                                elem)
+                                elem).item()
         out = fhandle._fp.read()  # pylint: disable=protected-access
         assert out == b"", "More data exist beyond the specified sizes."
     return om
