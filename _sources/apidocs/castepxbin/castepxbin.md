@@ -13,10 +13,10 @@
 :titlesonly:
 :maxdepth: 1
 
-castepxbin.wave
 castepxbin.pdos
-castepxbin.castep_bin
 castepxbin.ome_bin
+castepxbin.castep_bin
+castepxbin.wave
 ```
 
 ## Package Contents
