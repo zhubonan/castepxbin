@@ -38,7 +38,7 @@ castepxbin.wave
 ````{py:data} __version__
 :canonical: castepxbin.__version__
 :value: >
-   '0.3.0'
+   '0.3.1'
 
 ```{autodoc2-docstring} castepxbin.__version__
 ```
