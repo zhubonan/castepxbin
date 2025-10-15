@@ -102,7 +102,7 @@ def read_pdos_bin(filename: Union[str, BinaryIO], endian="big") -> Dict[str, Any
     esymbol = ">" if endian.upper() == "BIG" else ">"
     dint = np.dtype(esymbol + "i4")
     ddouble = np.dtype(esymbol + "f8")
-    dch80 = np.dtype(esymbol + "a80")
+    dch80 = np.dtype(esymbol + "S80")
     diarray = lambda x: f"{esymbol}({x},)i4"
 
     with FortranFile(filename, header_dtype=np.dtype(">u4")) as fhandle:
@@ -130,7 +130,7 @@ def read_pdos_bin(filename: Union[str, BinaryIO], endian="big") -> Dict[str, Any
             _, kpoint_positions[nk, :] = fhandle.read_record(">i4", ">(3,)f8")
             for ns in range(num_spins):
                 _ = fhandle.read_record(dint)
-                num_eigenvalues[ns] = fhandle.read_record(dint)
+                num_eigenvalues[ns] = fhandle.read_record(dint)[0]
                 for nb in range(num_eigenvalues[ns]):
                     pdos_weights[:, nb, nk, ns] = fhandle.read_record(
                         f">({num_popn_orb},)f8"

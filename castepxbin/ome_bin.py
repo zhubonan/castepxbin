@@ -29,7 +29,7 @@ def read_ome_bin(fname, num_bands, num_kpoints, num_spins, endian='big'):
 
     esymbol = '>' if endian.upper() == 'BIG' else '<'
     version_dtype = '{}f8'.format(esymbol)
-    header_dtype = '{}a80'.format(esymbol)
+    header_dtype = '{}S80'.format(esymbol)
     # Each complex number takes 2*8 bits - both real and imaginary parts are
     # double precision
     array_seg = '{}(3,{num_bands},{num_bands})c16'.format(esymbol,
@@ -112,7 +112,7 @@ def read_dome_bin(fname, num_bands, num_kpoints, num_spins, endian="BIG"):
     # double precision
     esymbol = '>' if endian.upper() == 'BIG' else '<'
     version_dtype = '{}f8'.format(esymbol)
-    header_dtype = '{}a80'.format(esymbol)
+    header_dtype = '{}S80'.format(esymbol)
     array_seg = '{}(3,{})f8'.format(esymbol, num_bands)
 
     dom = np.zeros((num_spins, num_kpoints, 3, num_bands), dtype=float)

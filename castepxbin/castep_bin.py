@@ -48,7 +48,7 @@ class FieldType:
             record_data, marker = _read_record(fp)
         else:
             marker = len(record_data)
-        count = marker // int(re.match(r"[><][a-z?]+(\d+)", self.type_string).group(1))
+        count = marker // int(re.match(r"[><][a-zS?]+(\d+)", self.type_string).group(1))
         return np.frombuffer(record_data, np.dtype(self.type_string), count=count)
 
 
@@ -149,7 +149,7 @@ class ArrayField(ScalarField):
             shape = actual_shape
 
         # Special case for 1D string array - return a list of strings
-        if "a" in self.type_string and len(self.shape) == 1:
+        if ("a" in self.type_string or "S" in self.type_string) and len(self.shape) == 1:
             return [tmp.decode().strip() for tmp in array]
         array = np.reshape(array, shape, order="F")
         return array
@@ -366,13 +366,13 @@ CASTEP_BIN_FIELD_SPEC = {
         SkippedField(),
         SkippedField(),
         SkippedField(),
-        StrField("electronic_minimizer", "a10"),
+        StrField("electronic_minimizer", "S10"),
         ScalarField("nelectrons", float),
         ScalarField("nup", float),
         ScalarField("ndown", float),
         ScalarField("spin", float),
         ScalarField("charge", float),
-        StrField("spin_treatment", "a20"),
+        StrField("spin_treatment", "S20"),
     ),
     # The "original" cell
     "CELL%NUM_IONS": (ScalarField("num_ions_orig", int),),
@@ -409,7 +409,7 @@ CASTEP_BIN_FIELD_SPEC = {
         ),
     ),
     "CELL%SPECIES_SYMBOL": (
-        ArrayField("species_symbol_orig", "a8", ("num_species_orig",)),
+        ArrayField("species_symbol_orig", "S8", ("num_species_orig",)),
     ),
     # The "current" cell
     "CELL%NUM_IONS_01": (ScalarField("num_ions", int),),
@@ -441,7 +441,7 @@ CASTEP_BIN_FIELD_SPEC = {
     "CELL%IONIC_POSITIONS_01": (
         ArrayField("ionic_positions", float, (3, "max_ions_in_species", "num_species")),
     ),
-    "CELL%SPECIES_SYMBOL_01": (ArrayField("species_symbol", "a8", ("num_species",)),),
+    "CELL%SPECIES_SYMBOL_01": (ArrayField("species_symbol", "S8", ("num_species",)),),
     "NKPTS_01": (ScalarField("nkpts", int),),
     "KPOINTS_01": (
         ArrayField("kpoints", float, shape=(3, "nkpts")),
@@ -498,7 +498,7 @@ CASTEP_CHECK_FIELD_SPEC = {
         ScalarField("fermi_energy", float),
         CompositeField([ScalarField("nbands", int), ScalarField("nspins", int)]),
         # Read the wave function
-        StrField("wave_header", "a4"),
+        StrField("wave_header", "S4"),
         CompositeField(
             [
                 ScalarField("ngx", int),
