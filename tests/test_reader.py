@@ -1,13 +1,23 @@
 """
 Test the reader
 """
+import io
 import os
+import struct
 
 import numpy as np
 import pytest
 import scipy.constants
 
-from castepxbin.castep_bin import read_castep_bin
+from castepxbin._dtypes import endian_symbol
+from castepxbin.castep_bin import (
+    ArrayField,
+    CompositeField,
+    ScalarField,
+    StrField,
+    _decode_composite,
+    read_castep_bin,
+)
 from castepxbin.ome_bin import read_cst_ome, read_dome_bin, read_ome_bin
 from castepxbin.pdos import (
     OrbitalEnum,
@@ -112,7 +122,7 @@ def test_castep_check_reader(castep_check_Si):
 
     wf = WaveFunction.from_dict(data)
     mesh = wf.get_reciprocal_grid()
-    assert all(mesh.shape[:3] == wf.mesh_size)
+    assert np.array_equal(mesh.shape[:3], wf.mesh_size)
 
     assert wf.get_plane_wave_coeffs().size > 0
     assert (
@@ -219,12 +229,18 @@ def test_castep_bin_reader(castep_bin_Si, castep_bin_SiO2):
     )
 
     # Compare the arrays per species
-    np.testing.assert_array_almost_equal(
-        expected_forces[0:4], data["forces"][:, :, 0].T
+    np.testing.assert_allclose(
+        expected_forces[0:4], data["forces"][:, :, 0].T, atol=1e-6
     )
-    np.testing.assert_array_almost_equal(
-        expected_forces[4:], data["forces"][:, :, 1].T[:2, :]
+    np.testing.assert_allclose(
+        expected_forces[4:], data["forces"][:, :, 1].T[:2, :], atol=1e-6
     )
+
+    # `np.frombuffer` hands back read-only views over the record buffer - the
+    # reader must copy so that callers can work with the arrays in place.
+    for key in ("forces", "real_lattice", "kpoints", "ionic_positions"):
+        assert data[key].flags.writeable, f"{key} is read-only"
+    data["forces"] += 0.0
 
     # Test reading all fields
     fobj = open(castep_bin_SiO2, "rb")
@@ -269,7 +285,27 @@ def test_cst_ome(cst_ome):
     """Test reading ome_bin file"""
     om = read_cst_ome(cst_ome, 23, 2, 1)
     assert om.shape == (1, 2, 3, 23, 23)
+    assert om.dtype == np.dtype(complex)
     assert np.imag(om[0, 0, 1, -1, -1]) == pytest.approx(0.0)
+
+    # Values pinned against the original record-by-record reader
+    assert om[0, 0, 0, 0, 0] == pytest.approx(-0.23182434794017326)
+    assert om[0, 0, 1, -1, -1] == pytest.approx(0.8834243620378435)
+    assert om[0, 1, 2, 5, 7] == pytest.approx(
+        0.06673646712344057 + 0.10960926081880899j
+    )
+    assert om[0, 0, 0, 0, 1] == pytest.approx(0.1710798190590074 - 0.01683650302237705j)
+
+    with open(cst_ome, "rb") as fhandle:
+        assert np.array_equal(read_cst_ome(fhandle, 23, 2, 1), om)
+
+
+def test_cst_ome_size_mismatch(cst_ome):
+    """Wrong array sizes must be reported, not silently mis-read"""
+    with pytest.raises(ValueError, match="Expected"):
+        read_cst_ome(cst_ome, 23, 2, 2)
+    with pytest.raises(ValueError, match="record markers"):
+        read_cst_ome(cst_ome, 23, 2, 1, endian="little")
 
 
 def test_dome_bin(dome_bin):
@@ -281,3 +317,126 @@ def test_dome_bin(dome_bin):
 
     assert dom.shape == (1, 2, 3, 23)
     assert dom[0, 0, 0, 0] == pytest.approx(-0.09854794)
+
+
+def _fortran_record(payload: bytes) -> io.BufferedReader:
+    """Wrap a payload in the 4 byte record markers CASTEP writes.
+
+    `_read_marker` checks for an `io.BufferedReader`, so a bare `io.BytesIO`
+    is not enough.
+    """
+    marker = struct.pack(">I", len(payload))
+    return io.BufferedReader(io.BytesIO(marker + payload + marker))
+
+
+@pytest.mark.parametrize(
+    "field,itemsize,kind",
+    [
+        (ScalarField("x", int), 4, "i"),
+        (ScalarField("x", float), 8, "f"),
+        (ScalarField("x", complex), 16, "c"),
+        (StrField("x", "S4"), 4, "S"),
+        (StrField("x", "S8"), 8, "S"),
+        (StrField("x", "S10"), 10, "S"),
+        (StrField("x", "S20"), 20, "S"),
+    ],
+)
+def test_field_dtype_metadata(field, itemsize, kind):
+    """Every dtype the specs build must report its own size and kind."""
+    assert field.dtype.itemsize == itemsize
+    assert field.dtype.kind == kind
+
+
+def test_composite_complex_subfield_stride():
+    """A c16 subfield must advance the record buffer by 16 bytes, not 6."""
+    payload = (
+        np.array([1 + 2j], dtype=">c16").tobytes()
+        + np.array([42], dtype=">i4").tobytes()
+    )
+    spec = CompositeField([ScalarField("zval", complex), ScalarField("nwaves", int)])
+    assert _decode_composite(_fortran_record(payload), spec) == [1 + 2j, 42]
+
+
+def test_composite_string_subfield_stride():
+    """An S10 subfield must advance the record buffer by 10 bytes, not 0."""
+    payload = b"PBE       " + np.array([7], dtype=">i4").tobytes()
+    spec = CompositeField([StrField("tag", "S10"), ScalarField("n", int)])
+    assert _decode_composite(_fortran_record(payload), spec) == ["PBE", 7]
+
+
+def test_composite_float_array_subfield():
+    """Regression guard for the one composite shape used in the shipped specs."""
+    payload = (
+        np.array([1.0, 2.0, 3.0], dtype=">f8").tobytes()
+        + np.array([9], dtype=">i4").tobytes()
+    )
+    spec = CompositeField([ArrayField("kpt", float, (3,)), ScalarField("nwaves", int)])
+    kpt, nwaves = _decode_composite(_fortran_record(payload), spec)
+    np.testing.assert_array_equal(kpt, [1.0, 2.0, 3.0])
+    assert nwaves == 9
+
+
+@pytest.mark.parametrize(
+    "endian,expected",
+    [("BIG", ">"), ("big", ">"), ("Big", ">"), ("LITTLE", "<"), ("little", "<")],
+)
+def test_endian_symbol(endian, expected):
+    assert endian_symbol(endian) == expected
+
+
+def test_endian_symbol_rejects_unknown():
+    with pytest.raises(ValueError, match="Unknown endianness"):
+        endian_symbol("middle")
+
+
+def test_pdos_endian_is_honoured(pdos_bin):
+    """The fixture is big-endian; reading it as little-endian must not succeed."""
+    from scipy.io import FortranFormattingError
+
+    with pytest.raises((FortranFormattingError, ValueError)):
+        read_pdos_bin(pdos_bin, endian="little")
+
+
+def _coeff_to_recip_reference(coeffs, nwaves_at_kp, grid_coords, ngx, ngy, ngz):
+    """The original element-by-element scatter, kept as a reference."""
+    _, nspinor, band_max, nkpts, nspins = coeffs.shape
+    indices = coords_to_indices(grid_coords, (ngx, ngy, ngz))
+    grid = np.zeros(
+        (ngx, ngy, ngz, nspinor, band_max, nkpts, nspins), order="F", dtype=complex
+    )
+    for ispin in range(nspins):
+        for ik in range(nkpts):
+            for ib in range(band_max):
+                for ispinor in range(nspinor):
+                    for ipw in range(nwaves_at_kp[ik]):
+                        grid[
+                            indices[0, ipw, ik],
+                            indices[1, ipw, ik],
+                            indices[2, ipw, ik],
+                            ispinor,
+                            ib,
+                            ik,
+                            ispin,
+                        ] = coeffs[ipw, ispinor, ib, ik, ispin]
+    return grid
+
+
+def test_coeff_to_recip_matches_reference(castep_check_Si):
+    """The vectorised scatter must be exactly equal to the original loop."""
+    wfc = read_castep_bin(castep_check_Si)["wavefunction"]
+    mesh = (wfc["ngx"], wfc["ngy"], wfc["ngz"])
+    args = (wfc["coeffs"], wfc["nwaves_at_kp"], wfc["pw_grid_coords"], *mesh)
+    assert np.array_equal(coeff_to_recip(*args), _coeff_to_recip_reference(*args))
+
+
+def test_coeff_to_recip_multiple_spins_and_spinors():
+    """The Si2 fixture has nspinor == nspins == 1, so cover the rest here."""
+    rng = np.random.default_rng(0)
+    ngx, ngy, ngz, nspinor, nbands, nkpts, nspins = 4, 5, 6, 2, 3, 4, 2
+    npw_max = 7
+    nwaves_at_kp = np.array([7, 5, 3, 1])
+    grid_coords = rng.integers(-9, 9, size=(3, npw_max, nkpts))
+    shape = (npw_max, nspinor, nbands, nkpts, nspins)
+    coeffs = rng.normal(size=shape) + 1j * rng.normal(size=shape)
+    args = (coeffs, nwaves_at_kp, grid_coords, ngx, ngy, ngz)
+    assert np.array_equal(coeff_to_recip(*args), _coeff_to_recip_reference(*args))
