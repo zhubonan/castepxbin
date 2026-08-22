@@ -10,15 +10,17 @@ license = {file = "LICENSE"}
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Development Status :: 4 - Beta",
     ]
 dynamic = ["version", "description"]
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 
-dependencies = ["numpy>=1,<3", "scipy>=1,<2"]
+dependencies = ["numpy>=1.22,<3", "scipy>=1.6,<2"]
 
 [project.urls]
 "Homepage" = "https://github.com/zhubonan/castepxbin"
@@ -36,3 +38,9 @@ test = ["pytest", "pytest-cov", "coverage"]
                 "pylint~=2.4.4; python_version>='3.0'",
                 "pylint-pytest",
             ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Deprecations are the early warning for the next numpy/scipy major. The suite
+# is clean under this today, so keep it that way.
+filterwarnings = ["error"]
