@@ -9,7 +9,7 @@ from ._dtypes import endian_symbol
 __all__ = ["read_ome_bin", "read_cst_ome", "read_dome_bin"]
 
 
-def read_ome_bin(fname, num_bands, num_kpoints, num_spins, endian='big'):
+def read_ome_bin(fname, num_bands, num_kpoints, num_spins, endian="big"):
     """
     Read the `ome_bin` file.
 
@@ -30,16 +30,14 @@ def read_ome_bin(fname, num_bands, num_kpoints, num_spins, endian='big'):
     """
 
     esymbol = endian_symbol(endian)
-    version_dtype = '{}f8'.format(esymbol)
-    header_dtype = '{}S80'.format(esymbol)
+    version_dtype = f"{esymbol}f8"
+    header_dtype = f"{esymbol}S80"
     # Each complex number takes 2*8 bits - both real and imaginary parts are
     # double precision
-    array_seg = '{}(3,{num_bands},{num_bands})c16'.format(esymbol,
-                                                          num_bands=num_bands)
+    array_seg = f"{esymbol}(3,{num_bands},{num_bands})c16"
 
-    om = np.zeros((num_spins, num_kpoints, 3, num_bands, num_bands),
-                  dtype=complex)
-    with FortranFile(fname, header_dtype=np.dtype(f'{esymbol}u4')) as fhandle:
+    om = np.zeros((num_spins, num_kpoints, 3, num_bands, num_bands), dtype=complex)
+    with FortranFile(fname, header_dtype=np.dtype(f"{esymbol}u4")) as fhandle:
         version = fhandle.read_record(version_dtype)
         header = fhandle.read_record(header_dtype)[0].decode()
         for ki in range(num_kpoints):
@@ -48,7 +46,7 @@ def read_ome_bin(fname, num_bands, num_kpoints, num_spins, endian='big'):
     return version[0], header, om
 
 
-def read_cst_ome(fname, num_bands, num_kpoints, num_spins, endian='big'):
+def read_cst_ome(fname, num_bands, num_kpoints, num_spins, endian="big"):
     """
     Read the `cst_ome` file.
 
@@ -74,39 +72,42 @@ def read_cst_ome(fname, num_bands, num_kpoints, num_spins, endian='big'):
     esymbol = endian_symbol(endian)
     # Each complex number takes 2*8 bytes - both real and imaginary parts are
     # double precision - and is wrapped in a pair of 4 byte record markers.
-    record_dtype = np.dtype([
-        ('head', f'{esymbol}u4'),
-        ('value', f'{esymbol}c16'),
-        ('tail', f'{esymbol}u4'),
-    ])
+    record_dtype = np.dtype(
+        [
+            ("head", f"{esymbol}u4"),
+            ("value", f"{esymbol}c16"),
+            ("tail", f"{esymbol}u4"),
+        ]
+    )
 
-    if hasattr(fname, 'read'):
+    if hasattr(fname, "read"):
         raw = fname.read()
     else:
-        with open(fname, 'rb') as fhandle:
+        with open(fname, "rb") as fhandle:
             raw = fhandle.read()
 
     num_records = num_kpoints * num_spins * 3 * num_bands * num_bands
     expected_size = num_records * record_dtype.itemsize
     if len(raw) != expected_size:
         raise ValueError(
-            f'Expected {expected_size} bytes for {num_records} records but the file '
-            f'holds {len(raw)} - check num_bands/num_kpoints/num_spins and the endianness.'
+            f"Expected {expected_size} bytes for {num_records} records but the file "
+            f"holds {len(raw)} - check num_bands/num_kpoints/num_spins and the endianness."
         )
 
     records = np.frombuffer(raw, dtype=record_dtype)
-    elem_size = record_dtype['value'].itemsize
-    if not (np.all(records['head'] == elem_size) and np.all(records['tail'] == elem_size)):
+    elem_size = record_dtype["value"].itemsize
+    if not (
+        np.all(records["head"] == elem_size) and np.all(records["tail"] == elem_size)
+    ):
         raise ValueError(
-            f'Unexpected Fortran record markers - every record should be {elem_size} bytes. '
-            'The endianness or the array sizes are probably wrong.'
+            f"Unexpected Fortran record markers - every record should be {elem_size} bytes. "
+            "The endianness or the array sizes are probably wrong."
         )
 
     # Values are written in the order [kpoint][spin][direction][band1][band2]
-    om = records['value'].reshape(
-        num_kpoints, num_spins, 3, num_bands, num_bands)
+    om = records["value"].reshape(num_kpoints, num_spins, 3, num_bands, num_bands)
     # Swap to (spin, kpoint, ...) and cast to the native byte order
-    return om.transpose(1, 0, 2, 3, 4).astype(complex, order='C')
+    return om.transpose(1, 0, 2, 3, 4).astype(complex, order="C")
 
 
 def read_dome_bin(fname, num_bands, num_kpoints, num_spins, endian="BIG"):
@@ -133,12 +134,12 @@ def read_dome_bin(fname, num_bands, num_kpoints, num_spins, endian="BIG"):
     # Each complex number takes 2*8 bits - both real and imaginary parts are
     # double precision
     esymbol = endian_symbol(endian)
-    version_dtype = '{}f8'.format(esymbol)
-    header_dtype = '{}S80'.format(esymbol)
-    array_seg = '{}(3,{})f8'.format(esymbol, num_bands)
+    version_dtype = f"{esymbol}f8"
+    header_dtype = f"{esymbol}S80"
+    array_seg = f"{esymbol}(3,{num_bands})f8"
 
     dom = np.zeros((num_spins, num_kpoints, 3, num_bands), dtype=float)
-    with FortranFile(fname, header_dtype=np.dtype(f'{esymbol}u4')) as fhandle:
+    with FortranFile(fname, header_dtype=np.dtype(f"{esymbol}u4")) as fhandle:
         version = fhandle.read_record(version_dtype)
         header = fhandle.read_record(header_dtype)[0].decode()
         for ki in range(num_kpoints):
