@@ -12,6 +12,7 @@ the [Euphonic](https://github.com/pace-neutrons/Euphonic) package.
 """
 
 import io
+import math
 
 # pylint: disable=invalid-name,too-few-public-methods
 import re
@@ -20,6 +21,8 @@ from struct import unpack
 from typing import Any, Collection, Dict, List, Optional, Tuple, Union
 
 import numpy as np
+
+from ._dtypes import endian_symbol
 
 __all__ = ("read_castep_bin",)
 
@@ -35,9 +38,14 @@ class FieldType:
 
     def __init__(self, name, dtype, endian="BIG"):
         self.name = name
-        ed = ">" if endian.lower() == "big" else "<"
+        ed = endian_symbol(endian)
         dtype = TYPE_MAP.get(dtype, dtype)
+        # `type_string` is kept for backwards compatibility - `dtype` is the
+        # single source of truth for the itemsize and the kind.  Note that the
+        # two are not interchangeable: `np.dtype(">S8").str` is `"|S8"`, as the
+        # byte order of a bytes dtype normalises to `|`.
         self.type_string = f"{ed}{dtype}"
+        self.dtype = np.dtype(self.type_string)
 
     def decode(self, fp, decoded=None, record_data=None):
         """
@@ -48,8 +56,10 @@ class FieldType:
             record_data, marker = _read_record(fp)
         else:
             marker = len(record_data)
-        count = marker // int(re.match(r"[><][a-zS?]+(\d+)", self.type_string).group(1))
-        return np.frombuffer(record_data, np.dtype(self.type_string), count=count)
+        count = marker // self.dtype.itemsize
+        # `np.frombuffer` gives a read-only view over the immutable `bytes`
+        # record - copy so that callers get a writable array.
+        return np.frombuffer(record_data, self.dtype, count=count).copy()
 
 
 class CompositeField:
@@ -128,28 +138,24 @@ class ArrayField(ScalarField):
         if decoded is None:
             decoded = {}
         shape, missing_dim = self.resolve_shape(decoded)
-        count = np.prod(shape)
+        count = math.prod(shape)
+        # Copy in both branches - `np.frombuffer` returns a read-only view over
+        # the immutable `bytes` record, and reshaping it keeps it read-only.
         # Fully specified
         if count > 0:
-            array = np.frombuffer(record_data, np.dtype(self.type_string), count=count)
+            array = np.frombuffer(record_data, self.dtype, count=count).copy()
         else:
             # Not fully specified - in this case we read the full record
-            array = np.frombuffer(record_data, np.dtype(self.type_string), count=-1)
-            # Work out the missing dimension...
-            tot = array.size
-            left = -tot / np.prod([elem for elem in shape if isinstance(elem, int)])
-            decoded[missing_dim] = int(left)
+            array = np.frombuffer(record_data, self.dtype, count=-1).copy()
+            # Work out the missing dimension, which `resolve_shape` marked -1
+            known = math.prod(dim for dim in shape if dim != -1)
+            left = array.size // known
+            decoded[missing_dim] = left
             # Reconstruct the shape array
-            actual_shape = []
-            for elem in shape:
-                if elem == -1:
-                    actual_shape.append(int(left))
-                else:
-                    actual_shape.append(elem)
-            shape = actual_shape
+            shape = tuple(left if dim == -1 else dim for dim in shape)
 
         # Special case for 1D string array - return a list of strings
-        if ("a" in self.type_string or "S" in self.type_string) and len(self.shape) == 1:
+        if self.dtype.kind == "S" and len(self.shape) == 1:
             return [tmp.decode().strip() for tmp in array]
         array = np.reshape(array, shape, order="F")
         return array
@@ -185,7 +191,7 @@ class StructuredField:
 
     def __init__(self, endian="BIG"):
         self.endian = endian
-        self.endian_sym = ">" if endian.lower() == "big" else "<"
+        self.endian_sym = endian_symbol(endian)
 
 
 class EigenValueAndOccCompositeField(StructuredField):
@@ -665,14 +671,14 @@ def _decode_records(
             # Read the decoded data
             record_data, _ = _read_record(fp)
             for subspec in record_spec.fields:
-                offset = int(subspec.type_string[-1])
+                stride = subspec.dtype.itemsize
                 if isinstance(subspec, ArrayField):
-                    offset *= np.prod(subspec.resolve_shape(decoded_data)[0])
-                assert offset > 0
+                    stride *= math.prod(subspec.resolve_shape(decoded_data)[0])
+                assert stride > 0
                 decoded_data[subspec.name] = subspec.decode(
                     fp, decoded_data, record_data=record_data
                 )
-                record_data = record_data[offset:]
+                record_data = record_data[stride:]
         elif isinstance(record_spec, StructuredField):
             record_spec.decode(fp, decoded_data)
 
@@ -684,12 +690,12 @@ def _decode_composite(fp, record_spec):
     record_data, _ = _read_record(fp)
     decoded = []
     for subspec in record_spec.fields:
-        offset = int(subspec.type_string[-1])
+        stride = subspec.dtype.itemsize
         if isinstance(subspec, ArrayField):
-            offset *= np.prod(subspec.shape)
-        assert offset > 0
+            stride *= math.prod(subspec.resolve_shape({})[0])
+        assert stride > 0
         decoded.append(subspec.decode(fp, {}, record_data=record_data))
-        record_data = record_data[offset:]
+        record_data = record_data[stride:]
     return decoded
 
 
