@@ -9,6 +9,8 @@ from typing import Any, BinaryIO, Dict, Union
 import numpy as np
 from scipy.io import FortranFile
 
+from ._dtypes import endian_symbol
+
 __all__ = ["read_pdos_bin", "compute_pdos", "reorder_pdos_data"]
 
 # pylint: disable=import-outside-toplevel, too-many-locals, too-many-branches
@@ -93,19 +95,24 @@ def read_pdos_bin(filename: Union[str, BinaryIO], endian="big") -> Dict[str, Any
 
     Args:
         filename (str): name of the file to be read
+        endian (str): Endian - CASTEP build instruction defaults to big-endian.
 
     Returns:
         A dictionary of the data that have been read.
         the weights of each orbital in stored in the 'pdos_weights' array
         with dimension (n_orbital, n_max_eign, n_kpoints, n_spin)
     """
-    esymbol = ">" if endian.upper() == "BIG" else ">"
+    esymbol = endian_symbol(endian)
     dint = np.dtype(esymbol + "i4")
     ddouble = np.dtype(esymbol + "f8")
     dch80 = np.dtype(esymbol + "S80")
-    diarray = lambda x: f"{esymbol}({x},)i4"
+    dmarker = np.dtype(esymbol + "u4")
 
-    with FortranFile(filename, header_dtype=np.dtype(">u4")) as fhandle:
+    def diarray(size):
+        """Shaped integer record dtype understood by ``FortranFile``"""
+        return f"{esymbol}({size},)i4"
+
+    with FortranFile(filename, header_dtype=dmarker) as fhandle:
         fversion = fhandle.read_record(ddouble)[0]
         fheader = fhandle.read_record(dch80)[0].decode()
         num_kpoints = fhandle.read_record(dint)[0]
@@ -127,13 +134,15 @@ def read_pdos_bin(filename: Union[str, BinaryIO], endian="big") -> Dict[str, Any
         num_eigenvalues = np.zeros(num_spins, dtype=int)
         # Now we start to read the actual data
         for nk in range(num_kpoints):
-            _, kpoint_positions[nk, :] = fhandle.read_record(">i4", ">(3,)f8")
+            _, kpoint_positions[nk, :] = fhandle.read_record(
+                f"{esymbol}i4", f"{esymbol}(3,)f8"
+            )
             for ns in range(num_spins):
                 _ = fhandle.read_record(dint)
                 num_eigenvalues[ns] = fhandle.read_record(dint)[0]
                 for nb in range(num_eigenvalues[ns]):
                     pdos_weights[:, nb, nk, ns] = fhandle.read_record(
-                        f">({num_popn_orb},)f8"
+                        f"{esymbol}({num_popn_orb},)f8"
                     )
 
     output = {

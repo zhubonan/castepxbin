@@ -34,7 +34,7 @@ pip install castepxbin
 To install extra dependencies may be needed for testing:
 
 ```
-pip install castepxbin[testing]
+pip install castepxbin[test]
 ```
 
 Or directly from the GitHub repo:
