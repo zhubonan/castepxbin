@@ -16,11 +16,8 @@ def coords_to_indices(grid_coords: np.ndarray, grid_size: np.ndarray):
     on to a reciprocal space grid.
     """
 
-    indices = grid_coords.copy()
-    grid_size = np.asarray(grid_size)
-    grid_size = grid_size[:, np.newaxis, np.newaxis]
-    indices = grid_coords % grid_size
-    return indices
+    grid_size = np.asarray(grid_size)[:, np.newaxis, np.newaxis]
+    return grid_coords % grid_size
 
 
 def coeff_to_recip(
@@ -48,20 +45,14 @@ def coeff_to_recip(
     grid = np.zeros(
         (ngx, ngy, ngz, nspinor, band_max, nkpts, nspins), order="F", dtype=complex
     )
-    for ispin in range(nspins):
-        for ik in range(nkpts):
-            for ib in range(band_max):
-                for ispinor in range(nspinor):
-                    for ipw in range(nwaves_at_kp[ik]):
-                        grid[
-                            indices[0, ipw, ik],
-                            indices[1, ipw, ik],
-                            indices[2, ipw, ik],
-                            ispinor,
-                            ib,
-                            ik,
-                            ispin,
-                        ] = coeffs[ipw, ispinor, ib, ik, ispin]
+    # The number of plane waves varies between k-points, so the k-point loop
+    # stays - but the spin/band/spinor/plane-wave loops collapse into a single
+    # scatter. The three index arrays are adjacent, so the broadcast (npw,)
+    # axis lands first on both sides: (npw, nspinor, band_max, nspins).
+    for ik in range(nkpts):
+        npw = nwaves_at_kp[ik]
+        ix, iy, iz = indices[:, :npw, ik]
+        grid[ix, iy, iz, :, :, ik, :] = coeffs[:npw, :, :, ik, :]
 
     return grid
 
